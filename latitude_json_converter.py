@@ -24,7 +24,8 @@ def main(argv):
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("output", help="Output File (will be overwritten!)")
-    arg_parser.add_argument("-f", action="store", dest="format", choices=["kml", "json", "csv"], default="kml", help="Format of the output")
+    arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js"], default="kml", help="Format of the output")
+    arg_parser.add_argument("-v", "--variable", default="latitudeJsonData", help="Variable name to be used for js output")
     args = arg_parser.parse_args()
     if args.input == args.output:
         arg_parser.error("Input and output have to be different files")
@@ -53,7 +54,10 @@ def main(argv):
             print("Error creating output file for writing")
             return
 
-        if args.format == "json":
+        if args.format == "json" or args.format == "js":
+            if args.format == "js":
+                f_out.write("window.%s = " % args.variable)
+
             f_out.write("{\n")
             f_out.write("  \"data\": {\n")
             f_out.write("    \"items\": [\n")
@@ -73,6 +77,8 @@ def main(argv):
                         f_out.write("      }")
             f_out.write("\n    ]\n")
             f_out.write("  }\n}")
+            if args.format == "js":
+                f_out.write(";")
 
         if args.format == "csv":
             f_out.write("Time,Location\n")

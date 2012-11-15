@@ -7,13 +7,14 @@ input                Input File (JSON)
 output               Output File (will be overwritten without prompt!)
 
 optional arguments:
-  -h, --help         show this help message and exit
-  -f {kml,json,csv}  Format of the output
+  -h, --help                      Show this help message and exit
+  -f, --format {kml,json,csv,js}  Format of the output
+  -v, --variable                  Variable name for js export
 
 
 Available formats:
 
-kml (Standard):
+kml (default):
 KML file with placemarks for each location in your Latitude History. Each placemark will have a point location and a timestamp
 
 csv:
@@ -22,6 +23,8 @@ Comma-separated textfile with a TimeStamp and a Location field, suitable for upl
 json:
 Correctly formated JSON file, the JSON file you get as export from Google Takeout has duplicate keys which makes normal parsing impossible
 
+js:
+JavaScript File which sets a variable in global namespace (default: window.latitudeJsonData) to the full data object for easy access in local scripts. Just include the js file before your actual script.
 
 ----------------------
 
