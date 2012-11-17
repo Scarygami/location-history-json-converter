@@ -37,17 +37,13 @@ def main(argv):
         print("Error opening input file")
         return
 
-    # turn json_data into correct json
-    json_data = "[" + json_data[1:-1] + "]"
-    json_data = json_data.replace("\"data\" :", "")
-
     try:
         data = json.loads(json_data)
     except:
         print("Error decoding json")
         return
 
-    if len("data") > 0:
+    if "data" in data and "items" in data["data"] and len(data["data"]["items"]) > 0:
         try:
             f_out = open(args.output, "w")
         except:
@@ -62,19 +58,17 @@ def main(argv):
             f_out.write("  \"data\": {\n")
             f_out.write("    \"items\": [\n")
             first = True
-            for d in data:
-                if "items" in d:
-                    items = d["items"]
-                    for item in items:
-                        if first:
-                            first = False
-                        else:
-                            f_out.write(",\n")
-                        f_out.write("      {\n")
-                        f_out.write("         \"timestampMs\": %s,\n" % item["timestampMs"])
-                        f_out.write("         \"latitude\": %s,\n" % item["latitude"])
-                        f_out.write("         \"longitude\": %s\n" % item["longitude"])
-                        f_out.write("      }")
+            items = data["data"]["items"]
+            for item in items:
+                if first:
+                    first = False
+                else:
+                    f_out.write(",\n")
+                f_out.write("      {\n")
+                f_out.write("         \"timestampMs\": %s,\n" % item["timestampMs"])
+                f_out.write("         \"latitude\": %s,\n" % item["latitude"])
+                f_out.write("         \"longitude\": %s\n" % item["longitude"])
+                f_out.write("      }")
             f_out.write("\n    ]\n")
             f_out.write("  }\n}")
             if args.format == "js":
@@ -82,29 +76,25 @@ def main(argv):
 
         if args.format == "csv":
             f_out.write("Time,Location\n")
-            for d in data:
-                if "items" in d:
-                    items = d["items"]
-                    for item in items:
-                        f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
-                        f_out.write(",")
-                        f_out.write("%s %s\n" % (item["latitude"], item["longitude"]))
+            items = data["data"]["items"]
+            for item in items:
+                f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
+                f_out.write(",")
+                f_out.write("%s %s\n" % (item["latitude"], item["longitude"]))
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
             f_out.write("<kml xmlns=\"http://earth.google.com/kml/2.2\">\n")
             f_out.write("  <Document>\n")
             f_out.write("    <name>Location History</name>\n")
-            for d in data:
-                if "items" in d:
-                    items = d["items"]
-                    for item in items:
-                        f_out.write("    <Placemark>\n")
-                        f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitude"], item["latitude"]))
-                        f_out.write("      <TimeStamp><when>")
-                        f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"))
-                        f_out.write("</when></TimeStamp>\n")
-                        f_out.write("    </Placemark>\n")
+            items = data["data"]["items"]
+            for item in items:
+                f_out.write("    <Placemark>\n")
+                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitude"], item["latitude"]))
+                f_out.write("      <TimeStamp><when>")
+                f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"))
+                f_out.write("</when></TimeStamp>\n")
+                f_out.write("    </Placemark>\n")
             f_out.write("  </Document>\n</kml>\n")
 
         f_out.close()
