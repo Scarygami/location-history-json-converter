@@ -85,7 +85,7 @@ def main(argv):
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-            f_out.write("<kml xmlns=\"http://earth.google.com/kml/2.2\">\n")
+            f_out.write("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n")
             f_out.write("  <Document>\n")
             f_out.write("    <name>Location History</name>\n")
             items = data["data"]["items"]
