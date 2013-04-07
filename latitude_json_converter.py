@@ -16,6 +16,7 @@
 
 import sys
 import json
+import math
 from argparse import ArgumentParser
 from datetime import datetime
 
@@ -24,7 +25,7 @@ def main(argv):
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("output", help="Output File (will be overwritten!)")
-    arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js"], default="kml", help="Format of the output")
+    arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx"], default="kml", help="Format of the output")
     arg_parser.add_argument("-v", "--variable", default="latitudeJsonData", help="Variable name to be used for js output")
     args = arg_parser.parse_args()
     if args.input == args.output:
@@ -97,11 +98,56 @@ def main(argv):
                 f_out.write("    </Placemark>\n")
             f_out.write("  </Document>\n</kml>\n")
 
+        if args.format == "gpx":
+            f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+            f_out.write("<gpx version=\"1.0\" creator=\"Google Latitude JSON Converter\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.topografix.com/GPX/1/0\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd\">\n")
+            f_out.write("  <trk>\n")
+            f_out.write("    <name>Location History</name>\n")
+            f_out.write("    <trkseg>\n")
+            lastloc = None
+            # Below assumes JSON input is in reverse chronological order.  If not, this will work better:
+            # items = sorted(data["data"]["items"], key=lambda x: x['timestampMs'])
+            items = reversed(data["data"]["items"])
+            for item in items:
+                if lastloc:
+                    timedelta = (int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60
+                    distancedelta = getDistanceFromLatLonInKm(item['latitude'], item['longitude'], lastloc['latitude'], lastloc['longitude'])
+                    if timedelta > 10 or distancedelta > 40:
+                        # No points for 10 minutes or 40km in under 10m? Start a new track.
+                        f_out.write("    </trkseg>\n")
+                        f_out.write("  </trk>\n")
+                        f_out.write("  <trk>\n")
+                        f_out.write("    <trkseg>\n")
+                f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitude"], item["longitude"]))
+                f_out.write("        <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                f_out.write("      </trkpt>\n")
+                lastloc = item
+            f_out.write("    </trkseg>\n")
+            f_out.write("  </trk>\n")
+            f_out.write("</gpx>\n")
+
         f_out.close()
 
     else:
         print("No data found in json")
         return
+
+
+# Haversine formula
+def getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2):
+    R = 6371 # Radius of the earth in km
+    dlat = deg2rad(lat2-lat1)
+    dlon = deg2rad(lon2-lon1)
+    a = math.sin(dlat/2) * math.sin(dlat/2) + \
+    math.cos(deg2rad(lat1)) * math.cos(deg2rad(lat2)) * \
+    math.sin(dlon/2) * math.sin(dlon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = R * c # Distance in km
+    return d
+
+
+def deg2rad(deg):
+    return deg * (math.pi/180)
 
 
 if __name__ == "__main__":
