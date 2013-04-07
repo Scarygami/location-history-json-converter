@@ -100,9 +100,11 @@ def main(argv):
 
         if args.format == "gpx":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-            f_out.write("<gpx version=\"1.0\" creator=\"Google Latitude JSON Converter\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.topografix.com/GPX/1/0\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd\">\n")
-            f_out.write("  <trk>\n")
+            f_out.write("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"Google Latitude JSON Converter\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n")
+            f_out.write("  <metadata>\n")
             f_out.write("    <name>Location History</name>\n")
+            f_out.write("  </metadata>\n")
+            f_out.write("  <trk>\n")
             f_out.write("    <trkseg>\n")
             lastloc = None
             # Below assumes JSON input is in reverse chronological order.  If not, this will work better:
@@ -119,7 +121,16 @@ def main(argv):
                         f_out.write("  <trk>\n")
                         f_out.write("    <trkseg>\n")
                 f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitude"], item["longitude"]))
+                if "altitude" in item:
+                    f_out.write("        <ele>%d</ele>\n" % item["altitude"])
                 f_out.write("        <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                if "accuracy" in item or "speed" in item:
+                    f_out.write("        <desc>\n")
+                    if "accuracy" in item:
+                        f_out.write("          Accuracy: %d\n" % item["accuracy"])
+                    if "speed" in item:
+                        f_out.write("          Speed:%d\n" % item["speed"])
+                    f_out.write("        </desc>\n")
                 f_out.write("      </trkpt>\n")
                 lastloc = item
             f_out.write("    </trkseg>\n")
