@@ -27,7 +27,7 @@ js:
 JavaScript File which sets a variable in global namespace (default: window.latitudeJsonData) to the full data object for easy access in local scripts. Just include the js file before your actual script.
 
 gpx:
-GPS Exchange Format, where points (including timestamps) are grouped together into tracks.
+GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.  Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
 
 ----------------------
 
