@@ -1,15 +1,15 @@
 This simple python script takes a Latitude JSON File which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
 
 Usage:
-latitude_json_converter.py input output [-h] [-f {kml,json,csv,js,gpx}] [-v]
+latitude_json_converter.py input output [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
 
 input                Input File (JSON)
 output               Output File (will be overwritten without prompt!)
 
 optional arguments:
-  -h, --help                          Show this help message and exit
-  -f, --format {kml,json,csv,js,gpx}  Format of the output
-  -v, --variable                      Variable name for js export
+  -h, --help                                    Show this help message and exit
+  -f, --format {kml,json,csv,js,gpx,gpxtracks}  Format of the output
+  -v, --variable                                Variable name for js export
 
 
 Available formats:
@@ -27,6 +27,9 @@ js:
 JavaScript File which sets a variable in global namespace (default: window.latitudeJsonData) to the full data object for easy access in local scripts. Just include the js file before your actual script.
 
 gpx:
+GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.  Data produced is valid GPX 1.1.  Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks).
+
+gpxtracks:
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.  Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
 
 ----------------------
