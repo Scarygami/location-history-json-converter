@@ -90,10 +90,26 @@ def main(argv):
             items = data["data"]["items"]
             for item in items:
                 f_out.write("    <Placemark>\n")
-                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitude"], item["latitude"]))
+                # Order of these tags is important to make valid KML: TimeStamp, ExtendedData, then Point
                 f_out.write("      <TimeStamp><when>")
                 f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"))
                 f_out.write("</when></TimeStamp>\n")
+                if "accuracy" in item or "speed" in item or "altitude" in item:
+                    f_out.write("      <ExtendedData>\n")
+                    if "accuracy" in item:
+                        f_out.write("        <Data name=\"accuracy\">\n")
+                        f_out.write("          <value>%d</value>\n" % item["accuracy"])
+                        f_out.write("        </Data>\n")
+                    if "speed" in item:
+                        f_out.write("        <Data name=\"speed\">\n")
+                        f_out.write("          <value>%d</value>\n" % item["speed"])
+                        f_out.write("        </Data>\n")
+                    if "altitude" in item:
+                        f_out.write("        <Data name=\"altitude\">\n")
+                        f_out.write("          <value>%d</value>\n" % item["altitude"])
+                        f_out.write("        </Data>\n")
+                    f_out.write("      </ExtendedData>\n")
+                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitude"], item["latitude"]))
                 f_out.write("    </Placemark>\n")
             f_out.write("  </Document>\n</kml>\n")
 
