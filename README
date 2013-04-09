@@ -1,4 +1,4 @@
-This simple python script takes a Latitude JSON File which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
+This simple Python script takes a Latitude JSON file which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
 
 Usage:
 latitude_json_converter.py input output [-h] [-f {kml,json,csv}]
@@ -15,16 +15,16 @@ optional arguments:
 Available formats:
 
 kml (default):
-KML file with placemarks for each location in your Latitude History. Each placemark will have a point location and a timestamp
+KML file with placemarks for each location in your Latitude History.  Each placemark will have a location, a timestamp, and accuracy/speed/altitude as available.  Data produced is valid KML 2.2.
 
 csv:
-Comma-separated textfile with a TimeStamp and a Location field, suitable for upload to Fusion Tables
+Comma-separated text file with a timestamp field and a location field, suitable for upload to Fusion Tables.
 
 json:
-Smaller JSON File with only the TimeStamp and the Location
+Smaller JSON file with only the timestamp and the location.
 
 js:
-JavaScript File which sets a variable in global namespace (default: window.latitudeJsonData) to the full data object for easy access in local scripts. Just include the js file before your actual script.
+JavaScript file which sets a variable in global namespace (default: window.latitudeJsonData) to the full data object for easy access in local scripts.  Just include the js file before your actual script.  Only timestamp and location are included.
 
 ----------------------
 
