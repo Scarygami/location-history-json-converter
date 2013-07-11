@@ -1,4 +1,8 @@
-This simple Python script takes a Latitude JSON file which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
+This Python script takes a Latitude JSON file which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
+
+Google has announced that Latitude will be retired on August 9, 2013.  If you want to save your Latitude history, make sure to download a backup from Google Takeout.  Then, whether you're exporting the data to import it into another service, or you just want to be able to view it when Latitude is gone (e.g. in Google Earth), use this tool to convert it to the format of your choice.
+
+You will need to have Python installed and know a little bit about running scripts from the command line.
 
 Usage:
 latitude_json_converter.py input output [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
