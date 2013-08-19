@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import division
+
 import sys
 import json
 import math
@@ -44,14 +46,14 @@ def main(argv):
         print("Error decoding json")
         return
 
-    if "data" in data and "items" in data["data"] and len(data["data"]["items"]) > 0:
+    if "locations" in data and len(data["locations"]) > 0:
         try:
             f_out = open(args.output, "w")
         except:
             print("Error creating output file for writing")
             return
 
-        items = data["data"]["items"]
+        items = data["locations"]
 
         if args.format == "json" or args.format == "js":
             if args.format == "js":
@@ -69,8 +71,8 @@ def main(argv):
                     f_out.write(",\n")
                 f_out.write("      {\n")
                 f_out.write("         \"timestampMs\": %s,\n" % item["timestampMs"])
-                f_out.write("         \"latitude\": %s,\n" % item["latitude"])
-                f_out.write("         \"longitude\": %s\n" % item["longitude"])
+                f_out.write("         \"latitude\": %s,\n" % (item["latitudeE7"] / 10000000))
+                f_out.write("         \"longitude\": %s\n" % (item["longitudeE7"] / 10000000))
                 f_out.write("      }")
             f_out.write("\n    ]\n")
             f_out.write("  }\n}")
@@ -82,7 +84,7 @@ def main(argv):
             for item in items:
                 f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                 f_out.write(",")
-                f_out.write("%s %s\n" % (item["latitude"], item["longitude"]))
+                f_out.write("%s %s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
@@ -110,7 +112,7 @@ def main(argv):
                         f_out.write("          <value>%d</value>\n" % item["altitude"])
                         f_out.write("        </Data>\n")
                     f_out.write("      </ExtendedData>\n")
-                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitude"], item["latitude"]))
+                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitudeE7"] / 10000000, item["latitudeE7"] / 10000000))
                 f_out.write("    </Placemark>\n")
             f_out.write("  </Document>\n</kml>\n")
 
@@ -122,7 +124,7 @@ def main(argv):
             f_out.write("  </metadata>\n")
             if args.format == "gpx":
                 for item in items:
-                    f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n"  % (item["latitude"], item["longitude"]))
+                    f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n"  % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
                     if "altitude" in item:
                         f_out.write("    <ele>%d</ele>\n" % item["altitude"])
                     f_out.write("    <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
@@ -147,14 +149,14 @@ def main(argv):
                 for item in items:
                     if lastloc:
                         timedelta = -((int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60)
-                        distancedelta = getDistanceFromLatLonInKm(item['latitude'], item['longitude'], lastloc['latitude'], lastloc['longitude'])
+                        distancedelta = getDistanceFromLatLonInKm(item['latitudeE7'] / 10000000, item['longitudeE7'] / 10000000, lastloc['latitudeE7'] / 10000000, lastloc['longitudeE7'] / 10000000)
                         if timedelta > 10 or distancedelta > 40:
                             # No points for 10 minutes or 40km in under 10m? Start a new track.
                             f_out.write("    </trkseg>\n")
                             f_out.write("  </trk>\n")
                             f_out.write("  <trk>\n")
                             f_out.write("    <trkseg>\n")
-                    f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitude"], item["longitude"]))
+                    f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
                     if "altitude" in item:
                         f_out.write("        <ele>%d</ele>\n" % item["altitude"])
                     f_out.write("        <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
