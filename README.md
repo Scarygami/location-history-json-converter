@@ -1,4 +1,4 @@
-lThis Python script takes the JSON file of your location history which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
+This Python script takes the JSON file of your location history which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
 
 You will need to have Python installed and know a little bit about running scripts from the command line.
 
@@ -39,8 +39,7 @@ gpxtracks:
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
 Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
 
-----------------------
-
+```
 Copyright 2012-2013 Gerwin Sturm, FoldedSoft e.U. / www.foldedsoft.at
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,3 +53,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+```
