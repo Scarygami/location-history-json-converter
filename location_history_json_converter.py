@@ -28,7 +28,7 @@ def main(argv):
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("output", help="Output File (will be overwritten!)")
     arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml", help="Format of the output")
-    arg_parser.add_argument("-v", "--variable", default="latitudeJsonData", help="Variable name to be used for js output")
+    arg_parser.add_argument("-v", "--variable", default="locationJsonData", help="Variable name to be used for js output")
     args = arg_parser.parse_args()
     if args.input == args.output:
         arg_parser.error("Input and output have to be different files")
