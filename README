@@ -1,11 +1,9 @@
-This Python script takes a Latitude JSON file which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
-
-Google has announced that Latitude will be retired on August 9, 2013.  If you want to save your Latitude history, make sure to download a backup from Google Takeout.  Then, whether you're exporting the data to import it into another service, or you just want to be able to view it when Latitude is gone (e.g. in Google Earth), use this tool to convert it to the format of your choice.
+lThis Python script takes the JSON file of your location history which you can get via Google Takeout (https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
 
 You will need to have Python installed and know a little bit about running scripts from the command line.
 
 Usage:
-latitude_json_converter.py input output [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
+location_history_json_converter.py input output [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
 
 input                Input File (JSON)
 output               Output File (will be overwritten without prompt!)
@@ -19,7 +17,7 @@ optional arguments:
 Available formats:
 
 kml (default):
-KML file with placemarks for each location in your Latitude History.  Each placemark will have a location, a timestamp, and accuracy/speed/altitude as available.  Data produced is valid KML 2.2.
+KML file with placemarks for each location in your Location History.  Each placemark will have a location, a timestamp, and accuracy/speed/altitude as available.  Data produced is valid KML 2.2.
 
 csv:
 Comma-separated text file with a timestamp field and a location field, suitable for upload to Fusion Tables.
@@ -28,17 +26,22 @@ json:
 Smaller JSON file with only the timestamp and the location.
 
 js:
-JavaScript file which sets a variable in global namespace (default: window.latitudeJsonData) to the full data object for easy access in local scripts.  Just include the js file before your actual script.  Only timestamp and location are included.
+JavaScript file which sets a variable in global namespace (default: window.locationJsonData)
+to the full data object for easy access in local scripts.
+Just include the js file before your actual script.
+Only timestamp and location are included.
 
 gpx:
-GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.  Data produced is valid GPX 1.1.  Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks).
+GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
+Data produced is valid GPX 1.1.  Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks).
 
 gpxtracks:
-GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.  Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
+GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
+Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
 
 ----------------------
 
-Copyright 2012 Gerwin Sturm, FoldedSoft e.U. / www.foldedsoft.at
+Copyright 2012-2013 Gerwin Sturm, FoldedSoft e.U. / www.foldedsoft.at
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
