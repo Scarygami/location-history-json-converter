@@ -26,10 +26,12 @@ from datetime import datetime
 def main(argv):
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
-    arg_parser.add_argument("output", help="Output File (will be overwritten!)")
+    arg_parser.add_argument("-o", "--output", help="Output File (will be overwritten!)")
     arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml", help="Format of the output")
     arg_parser.add_argument("-v", "--variable", default="locationJsonData", help="Variable name to be used for js output")
     args = arg_parser.parse_args()
+    if not args.output: #if the output file is not specified, set to input filename with a diffrent extension
+        args.output = '.'.join(args.input.split('.')[:-1]) + '.'+args.format
     if args.input == args.output:
         arg_parser.error("Input and output have to be different files")
         return
