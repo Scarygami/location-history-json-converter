@@ -6,12 +6,12 @@ You will need to have Python installed and know a little bit about running scrip
 
 ### Usage
 ```
-location_history_json_converter.py input output [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
+location_history_json_converter.py input [-o] [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
 
 input                Input File (JSON)
-output               Output File (will be overwritten without prompt!)
 
 optional arguments:
+  -o, --output                                  Name of the output file (will be overwritten without prompt!) if left unspecified, the output file name will default to replacing the input file name's extension
   -h, --help                                    Show this help message and exit
   -f, --format {kml,json,csv,js,gpx,gpxtracks}  Format of the output
   -v, --variable                                Variable name for js export
