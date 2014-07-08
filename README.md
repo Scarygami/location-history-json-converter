@@ -6,7 +6,7 @@ You will need to have Python installed and know a little bit about running scrip
 
 ### Usage
 ```
-location_history_json_converter.py input [-o] [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
+location_history_json_converter.py inputFileName [-o] [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
 
 input                Input File (JSON)
 
