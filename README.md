@@ -11,10 +11,14 @@ location_history_json_converter.py inputFileName [-o] [-h] [-f {kml,json,csv,js,
 input                Input File (JSON)
 
 optional arguments:
-  -o, --output                                  Name of the output file (will be overwritten without prompt!) if left unspecified, the output file name will default to replacing the input file name's extension
+  -o, --output                                 Name of the output file (will be overwritten without prompt!) if left unspecified, the output file name will default to replacing the input file name's extension
   -h, --help                                    Show this help message and exit
   -f, --format {kml,json,csv,js,gpx,gpxtracks}  Format of the output
   -v, --variable                                Variable name for js export
+  -s, --startdate STARTDATE             The Start Date - format YYYY-MM-DD (0h00)
+  -e, --enddate ENDDATE                  The End Date - format YYYY-MM-DD (0h00)
+  -c, --chronological                         Sort items in chronological order
+
 ```
 
 ### Available formats
