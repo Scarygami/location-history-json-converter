@@ -82,11 +82,11 @@ def main(argv):
                 f_out.write(";")
 
         if args.format == "csv":
-            f_out.write("Time,Location\n")
+            f_out.write("time,latitude,longitude\n")
             for item in items:
                 f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                 f_out.write(",")
-                f_out.write("%s %s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
+                f_out.write("%s,%s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
