@@ -46,7 +46,7 @@ def main(argv):
     arg_parser.add_argument('-s', "--startdate",  help="The Start Date - format YYYY-MM-DD (0h00)",  type=valid_date)
     arg_parser.add_argument('-e', "--enddate",  help="The End Date - format YYYY-MM-DD (0h00)",  type=valid_date)
     arg_parser.add_argument('-c', "--chronological",  help="Sort items in chronological order", action="store_true")
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(args=argv)
     if not args.output: #if the output file is not specified, set to input filename with a diffrent extension
         args.output = '.'.join(args.input.split('.')[:-1]) + '.'+args.format
     if args.input == args.output:
@@ -74,9 +74,10 @@ def main(argv):
 
         items = data["locations"]
         
+        if args.startdate or args.enddate:
+            items = [ item for item in items if dateCheck(item["timestampMs"]) ]
+
         if args.chronological:
-            if args.startdate or args.enddate:
-                items = [ item for item in items if dateCheck(item["timestampMs"]) ]
             items = sorted(items, key=lambda item: item["timestampMs"])
 
         if args.format == "json" or args.format == "js":
@@ -89,7 +90,6 @@ def main(argv):
             first = True
 
             for item in items:
-                if not dateCheck(item["timestampMs"]) :  continue
                 if first:
                     first = False
                 else:
@@ -107,7 +107,6 @@ def main(argv):
         if args.format == "csv":
             f_out.write("Time,Location\n")
             for item in items:
-                if not dateCheck(item["timestampMs"]) :  continue
                 f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                 f_out.write(",")
                 f_out.write("%s %s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
@@ -151,7 +150,6 @@ def main(argv):
             f_out.write("  </metadata>\n")
             if args.format == "gpx":
                 for item in items:
-                    if not dateCheck(item["timestampMs"]) :  continue
                     f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n"  % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
                     if "altitude" in item:
                         f_out.write("    <ele>%d</ele>\n" % item["altitude"])
@@ -172,10 +170,10 @@ def main(argv):
                 f_out.write("  <trk>\n")
                 f_out.write("    <trkseg>\n")
                 lastloc = None
-                # The deltas below assume input is in reverse chronological order.  If it's not, uncomment this:
+                # The deltas below assume input is in chronological or reverse chronological order.  
+                # If it's not, use the '--chronological' option or uncomment this:
                 # items = sorted(data["data"]["items"], key=lambda x: x['timestampMs'], reverse=True)
                 for item in items:
-                    if not dateCheck(item["timestampMs"]) :  continue
                     if lastloc:
                         timedelta = abs((int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60)
                         distancedelta = getDistanceFromLatLonInKm(item['latitudeE7'] / 10000000, item['longitudeE7'] / 10000000, lastloc['latitudeE7'] / 10000000, lastloc['longitudeE7'] / 10000000)
