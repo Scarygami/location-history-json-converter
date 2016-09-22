@@ -22,14 +22,31 @@ import math
 from argparse import ArgumentParser
 from datetime import datetime
 
+def valid_date(s):
+    try:
+        return datetime.strptime(s, "%Y-%m-%d")
+    except ValueError:
+        msg = "Not a valid date: '{0}'.".format(s)
+        raise argparse.ArgumentTypeError(msg)
+
+def dateCheck(timestampms):
+    global args
+    dt = datetime.fromtimestamp(int(timestampms) / 1000)
+    if args.startdate and args.startdate > dt : return False
+    if args.enddate and args.enddate < dt : return False
+    return True
 
 def main(argv):
+    global args
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("-o", "--output", help="Output File (will be overwritten!)")
     arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml", help="Format of the output")
     arg_parser.add_argument("-v", "--variable", default="locationJsonData", help="Variable name to be used for js output")
-    args = arg_parser.parse_args()
+    arg_parser.add_argument('-s', "--startdate",  help="The Start Date - format YYYY-MM-DD (0h00)",  type=valid_date)
+    arg_parser.add_argument('-e', "--enddate",  help="The End Date - format YYYY-MM-DD (0h00)",  type=valid_date)
+    arg_parser.add_argument('-c', "--chronological",  help="Sort items in chronological order", action="store_true")
+    args = arg_parser.parse_args(args=argv)
     if not args.output: #if the output file is not specified, set to input filename with a diffrent extension
         args.output = '.'.join(args.input.split('.')[:-1]) + '.'+args.format
     if args.input == args.output:
@@ -56,6 +73,12 @@ def main(argv):
             return
 
         items = data["locations"]
+        
+        if args.startdate or args.enddate:
+            items = [ item for item in items if dateCheck(item["timestampMs"]) ]
+
+        if args.chronological:
+            items = sorted(items, key=lambda item: item["timestampMs"])
 
         if args.format == "json" or args.format == "js":
             if args.format == "js":
@@ -94,6 +117,7 @@ def main(argv):
             f_out.write("  <Document>\n")
             f_out.write("    <name>Location History</name>\n")
             for item in items:
+                if not dateCheck(item["timestampMs"]) :  continue
                 f_out.write("    <Placemark>\n")
                 # Order of these tags is important to make valid KML: TimeStamp, ExtendedData, then Point
                 f_out.write("      <TimeStamp><when>")
@@ -146,11 +170,12 @@ def main(argv):
                 f_out.write("  <trk>\n")
                 f_out.write("    <trkseg>\n")
                 lastloc = None
-                # The deltas below assume input is in reverse chronological order.  If it's not, uncomment this:
+                # The deltas below assume input is in chronological or reverse chronological order.  
+                # If it's not, use the '--chronological' option or uncomment this:
                 # items = sorted(data["data"]["items"], key=lambda x: x['timestampMs'], reverse=True)
                 for item in items:
                     if lastloc:
-                        timedelta = -((int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60)
+                        timedelta = abs((int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60)
                         distancedelta = getDistanceFromLatLonInKm(item['latitudeE7'] / 10000000, item['longitudeE7'] / 10000000, lastloc['latitudeE7'] / 10000000, lastloc['longitudeE7'] / 10000000)
                         if timedelta > 10 or distancedelta > 40:
                             # No points for 10 minutes or 40km in under 10m? Start a new track.
