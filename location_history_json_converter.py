@@ -82,7 +82,7 @@ def main(argv):
                 f_out.write(";")
 
         if args.format == "csv":
-            f_out.write("time,latitude,longitude\n")
+            f_out.write("Time,Latitude,Longitude\n")
             for item in items:
                 f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                 f_out.write(",")
