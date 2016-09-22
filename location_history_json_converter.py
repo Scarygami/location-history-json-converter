@@ -117,7 +117,6 @@ def main(argv):
             f_out.write("  <Document>\n")
             f_out.write("    <name>Location History</name>\n")
             for item in items:
-                if not dateCheck(item["timestampMs"]) :  continue
                 f_out.write("    <Placemark>\n")
                 # Order of these tags is important to make valid KML: TimeStamp, ExtendedData, then Point
                 f_out.write("      <TimeStamp><when>")
