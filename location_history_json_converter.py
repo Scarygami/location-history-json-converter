@@ -36,7 +36,7 @@ def dateCheck(timestampms):
     if args.enddate and args.enddate < dt : return False
     return True
 
-def main(argv):
+def main():
     global args
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
@@ -46,7 +46,7 @@ def main(argv):
     arg_parser.add_argument('-s', "--startdate",  help="The Start Date - format YYYY-MM-DD (0h00)",  type=valid_date)
     arg_parser.add_argument('-e', "--enddate",  help="The End Date - format YYYY-MM-DD (0h00)",  type=valid_date)
     arg_parser.add_argument('-c', "--chronological",  help="Sort items in chronological order", action="store_true")
-    args = arg_parser.parse_args(args=argv)
+    args = arg_parser.parse_args()
     if not args.output: #if the output file is not specified, set to input filename with a diffrent extension
         args.output = '.'.join(args.input.split('.')[:-1]) + '.'+args.format
     if args.input == args.output:
@@ -224,4 +224,4 @@ def deg2rad(deg):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main())
