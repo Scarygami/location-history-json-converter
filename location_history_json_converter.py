@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2012 Gerwin Sturm, FoldedSoft e.U. / www.foldedsoft.at
+# Copyright 2012-2017 Gerwin Sturm
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ from __future__ import division
 import sys
 import json
 import math
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 
 def valid_date(s):
@@ -27,28 +27,28 @@ def valid_date(s):
         return datetime.strptime(s, "%Y-%m-%d")
     except ValueError:
         msg = "Not a valid date: '{0}'.".format(s)
-        raise argparse.ArgumentTypeError(msg)
+        raise ArgumentTypeError(msg)
 
-def dateCheck(timestampms):
-    global args
+def dateCheck(timestampms, startdate, enddate):
     dt = datetime.fromtimestamp(int(timestampms) / 1000)
-    if args.startdate and args.startdate > dt : return False
-    if args.enddate and args.enddate < dt : return False
+    if startdate and startdate > dt : return False
+    if enddate and enddate < dt : return False
     return True
 
 def main():
-    global args
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("-o", "--output", help="Output File (will be overwritten!)")
     arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml", help="Format of the output")
     arg_parser.add_argument("-v", "--variable", default="locationJsonData", help="Variable name to be used for js output")
-    arg_parser.add_argument('-s', "--startdate",  help="The Start Date - format YYYY-MM-DD (0h00)",  type=valid_date)
-    arg_parser.add_argument('-e', "--enddate",  help="The End Date - format YYYY-MM-DD (0h00)",  type=valid_date)
-    arg_parser.add_argument('-c', "--chronological",  help="Sort items in chronological order", action="store_true")
+    arg_parser.add_argument('-s', "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=valid_date)
+    arg_parser.add_argument('-e', "--enddate", help="The End Date - format YYYY-MM-DD (0h00)", type=valid_date)
+    arg_parser.add_argument('-c', "--chronological", help="Sort items in chronological order", action="store_true")
     args = arg_parser.parse_args()
+
     if not args.output: #if the output file is not specified, set to input filename with a diffrent extension
-        args.output = '.'.join(args.input.split('.')[:-1]) + '.'+args.format
+        args.output = '.'.join(args.input.split('.')[:-1]) + '.' + args.format
+
     if args.input == args.output:
         arg_parser.error("Input and output have to be different files")
         return
@@ -73,9 +73,9 @@ def main():
             return
 
         items = data["locations"]
-        
+
         if args.startdate or args.enddate:
-            items = [ item for item in items if dateCheck(item["timestampMs"]) ]
+            items = [ item for item in items if dateCheck(item["timestampMs"], args.startdate, args.enddate) ]
 
         if args.chronological:
             items = sorted(items, key=lambda item: item["timestampMs"])
@@ -169,7 +169,7 @@ def main():
                 f_out.write("  <trk>\n")
                 f_out.write("    <trkseg>\n")
                 lastloc = None
-                # The deltas below assume input is in chronological or reverse chronological order.  
+                # The deltas below assume input is in chronological or reverse chronological order.
                 # If it's not, use the '--chronological' option or uncomment this:
                 # items = sorted(data["data"]["items"], key=lambda x: x['timestampMs'], reverse=True)
                 for item in items:

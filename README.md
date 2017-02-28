@@ -1,6 +1,8 @@
 # Location History JSON Converter
 
-This Python script takes the JSON file of your location history which you can get via [Google Takeout](https://www.google.com/takeout/?pli=1#custom:latitude) and converts it into other formats.
+This Python script takes the JSON file of your location history which you can get via
+[Google Takeout](https://takeout.google.com/settings/takeout/custom/location_history)
+and converts it into other formats.
 
 You will need to have Python installed and know a little bit about running scripts from the command line.
 
@@ -11,13 +13,14 @@ location_history_json_converter.py inputFileName [-o] [-h] [-f {kml,json,csv,js,
 input                Input File (JSON)
 
 optional arguments:
-  -o, --output                                 Name of the output file (will be overwritten without prompt!) if left unspecified, the output file name will default to replacing the input file name's extension
+  -o, --output                                  Name of the output file (will be overwritten without prompt!)
+                                                If left unspecified, the output file name will default to replacing the input file name's extension
   -h, --help                                    Show this help message and exit
   -f, --format {kml,json,csv,js,gpx,gpxtracks}  Format of the output
   -v, --variable                                Variable name for js export
-  -s, --startdate STARTDATE             The Start Date - format YYYY-MM-DD (0h00)
-  -e, --enddate ENDDATE                  The End Date - format YYYY-MM-DD (0h00)
-  -c, --chronological                         Sort items in chronological order
+  -s, --startdate STARTDATE                     The Start Date - format YYYY-MM-DD (0h00)
+  -e, --enddate ENDDATE                         The End Date - format YYYY-MM-DD (0h00)
+  -c, --chronological                           Sort items in chronological order
 
 ```
 
@@ -49,7 +52,7 @@ Data produced is valid GPX 1.1.  Points are grouped together into tracks by time
 ### Licence
 
 ```
-Copyright 2012-2013 Gerwin Sturm, FoldedSoft e.U. / www.foldedsoft.at
+Copyright 2012-2017 Gerwin Sturm
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
