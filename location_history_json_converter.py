@@ -84,23 +84,20 @@ def main():
             if args.format == "js":
                 f_out.write("window.%s = " % args.variable)
 
-            f_out.write("{\n")
-            f_out.write("  \"data\": {\n")
-            f_out.write("    \"items\": [\n")
+            f_out.write("{\"locations\":[")
             first = True
 
             for item in items:
                 if first:
                     first = False
                 else:
-                    f_out.write(",\n")
-                f_out.write("      {\n")
-                f_out.write("         \"timestampMs\": %s,\n" % item["timestampMs"])
-                f_out.write("         \"latitude\": %s,\n" % (item["latitudeE7"] / 10000000))
-                f_out.write("         \"longitude\": %s\n" % (item["longitudeE7"] / 10000000))
-                f_out.write("      }")
-            f_out.write("\n    ]\n")
-            f_out.write("  }\n}")
+                    f_out.write(",")
+                f_out.write("{")
+                f_out.write("\"timestampMs\":%s," % item["timestampMs"])
+                f_out.write("\"latitudeE7\":%s," % item["latitudeE7"])
+                f_out.write("\"longitudeE7\":%s" % item["longitudeE7"])
+                f_out.write("}")
+            f_out.write("]}")
             if args.format == "js":
                 f_out.write(";")
 
