@@ -62,7 +62,7 @@ def main():
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("-o", "--output", help="Output File (will be overwritten!)")
     arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml",
-                            help="Format of the output.json")
+                            help="Format of the output")
     arg_parser.add_argument("-v", "--variable", default="locationJsonData",
                             help="Variable name to be used for js output.json")
     arg_parser.add_argument('-s', "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=valid_date)
