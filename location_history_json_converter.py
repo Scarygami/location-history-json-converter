@@ -152,7 +152,6 @@ def main():
         if args.format == "csv":
             f_out.write("Time,Latitude,Longitude\n")
             for item in items:
-                f_out.write("1,")
                 f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                 f_out.write(",")
                 f_out.write("%s,%s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
