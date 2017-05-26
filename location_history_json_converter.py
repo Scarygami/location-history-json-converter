@@ -73,11 +73,11 @@ def main():
                             metavar="lat,lon", nargs='*', type=valid_polygon)
     args = arg_parser.parse_args()
 
-    if not args.output:  # if the output.json file is not specified, set to input filename with a diffrent extension
+    if not args.output:  # if the output file is not specified, set to input filename with a diffrent extension
         args.output = '.'.join(args.input.split('.')[:-1]) + '.' + args.format
 
     if args.input == args.output:
-        arg_parser.error("Input and output.json have to be different files")
+        arg_parser.error("Input and output have to be different files")
         return
 
     if args.polygon and len(args.polygon) < 2:
@@ -100,7 +100,7 @@ def main():
         try:
             f_out = open(args.output, "w")
         except:
-            print("Error creating output.json file for writing")
+            print("Error creating output file for writing")
             return
 
         items = data["locations"]
