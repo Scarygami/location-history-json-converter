@@ -21,6 +21,19 @@ import json
 import math
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
+import logging
+from shapely.geometry import Polygon
+from shapely.geometry import Point
+
+
+def valid_polygon(s):
+    try:
+        [lat, lon] = s.split(",")
+        return float(lat), float(lon)
+    except ValueError:
+        msg = "Not a valid point: '{0}'.".format(s)
+        raise ArgumentTypeError(msg)
+
 
 def valid_date(s):
     try:
@@ -29,28 +42,46 @@ def valid_date(s):
         msg = "Not a valid date: '{0}'.".format(s)
         raise ArgumentTypeError(msg)
 
+
+def check_point(polygon, lon, lat):
+    # build a shapely point from your geopoint
+    point = Point(lon / 10000000, lat / 10000000)
+    # the contains function does exactly what you want
+    return polygon.contains(point)
+
+
 def dateCheck(timestampms, startdate, enddate):
     dt = datetime.fromtimestamp(int(timestampms) / 1000)
-    if startdate and startdate > dt : return False
-    if enddate and enddate < dt : return False
+    if startdate and startdate > dt: return False
+    if enddate and enddate < dt: return False
     return True
+
 
 def main():
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("-o", "--output", help="Output File (will be overwritten!)")
-    arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml", help="Format of the output")
-    arg_parser.add_argument("-v", "--variable", default="locationJsonData", help="Variable name to be used for js output")
+    arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml",
+                            help="Format of the output.json")
+    arg_parser.add_argument("-v", "--variable", default="locationJsonData",
+                            help="Variable name to be used for js output.json")
     arg_parser.add_argument('-s', "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=valid_date)
     arg_parser.add_argument('-e', "--enddate", help="The End Date - format YYYY-MM-DD (0h00)", type=valid_date)
     arg_parser.add_argument('-c', "--chronological", help="Sort items in chronological order", action="store_true")
+    arg_parser.add_argument('-p', "--polygon",
+                            help="Enter a list of points (lat,lon) that create a polygon. If 2 points are given (bottomleft, upper right) a rectangular is created",
+                            metavar="lat,lon", nargs='*', type=valid_polygon)
     args = arg_parser.parse_args()
 
-    if not args.output: #if the output file is not specified, set to input filename with a diffrent extension
+    if not args.output:  # if the output.json file is not specified, set to input filename with a diffrent extension
         args.output = '.'.join(args.input.split('.')[:-1]) + '.' + args.format
 
     if args.input == args.output:
-        arg_parser.error("Input and output have to be different files")
+        arg_parser.error("Input and output.json have to be different files")
+        return
+
+    if args.polygon and len(args.polygon) < 2:
+        arg_parser.error("Polygon needs at least 2 points to create a rectangule (bottom left and top right)")
         return
 
     try:
@@ -69,16 +100,33 @@ def main():
         try:
             f_out = open(args.output, "w")
         except:
-            print("Error creating output file for writing")
+            print("Error creating output.json file for writing")
             return
 
         items = data["locations"]
 
         if args.startdate or args.enddate:
-            items = [ item for item in items if dateCheck(item["timestampMs"], args.startdate, args.enddate) ]
+            items = [item for item in items if dateCheck(item["timestampMs"], args.startdate, args.enddate)]
 
         if args.chronological:
             items = sorted(items, key=lambda item: item["timestampMs"])
+
+        if args.polygon:
+
+            if len(args.polygon) == 2:
+                # create a Rectangul
+                [bottom_lx, top_rx] = args.polygon
+                [bottom_lx_lat, bottom_lx_lon] = bottom_lx.split(",")
+                [top_rx_lat, top_rx_lon] = top_rx.split(",")
+                ext = [(float(bottom_lx_lat), float(bottom_lx_lon)), (float(bottom_lx_lat), float(top_rx_lon)),
+                       (float(top_rx_lat), float(top_rx_lon)), (float(top_rx_lat), float(bottom_lx_lon))]
+
+            else:
+                ext = [(elem.split(",")[0], elem.split(",")[1]) for elem in args.polygon]
+
+            print("Polygon created: {}".format(ext))
+            polygon = Polygon(ext)
+            items = [item for item in items if check_point(polygon, item["latitudeE7"], item["longitudeE7"])]
 
         if args.format == "json" or args.format == "js":
             if args.format == "js":
@@ -104,6 +152,7 @@ def main():
         if args.format == "csv":
             f_out.write("Time,Latitude,Longitude\n")
             for item in items:
+                f_out.write("1,")
                 f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                 f_out.write(",")
                 f_out.write("%s,%s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
@@ -134,23 +183,28 @@ def main():
                         f_out.write("          <value>%d</value>\n" % item["altitude"])
                         f_out.write("        </Data>\n")
                     f_out.write("      </ExtendedData>\n")
-                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitudeE7"] / 10000000, item["latitudeE7"] / 10000000))
+                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (
+                    item["longitudeE7"] / 10000000, item["latitudeE7"] / 10000000))
                 f_out.write("    </Placemark>\n")
             f_out.write("  </Document>\n</kml>\n")
 
         if args.format == "gpx" or args.format == "gpxtracks":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-            f_out.write("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"Google Latitude JSON Converter\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n")
+            f_out.write(
+                "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"Google Latitude JSON Converter\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n")
             f_out.write("  <metadata>\n")
             f_out.write("    <name>Location History</name>\n")
             f_out.write("  </metadata>\n")
             if args.format == "gpx":
                 for item in items:
-                    f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n"  % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
+                    f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n" % (
+                        item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
                     if "altitude" in item:
                         f_out.write("    <ele>%d</ele>\n" % item["altitude"])
-                    f_out.write("    <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
-                    f_out.write("    <desc>%s" % datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
+                    f_out.write("    <time>%s</time>\n" % str(
+                        datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                    f_out.write("    <desc>%s" % datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime(
+                        "%Y-%m-%d %H:%M:%S"))
                     if "accuracy" in item or "speed" in item:
                         f_out.write(" (")
                         if "accuracy" in item:
@@ -172,17 +226,22 @@ def main():
                 for item in items:
                     if lastloc:
                         timedelta = abs((int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60)
-                        distancedelta = getDistanceFromLatLonInKm(item['latitudeE7'] / 10000000, item['longitudeE7'] / 10000000, lastloc['latitudeE7'] / 10000000, lastloc['longitudeE7'] / 10000000)
+                        distancedelta = getDistanceFromLatLonInKm(item['latitudeE7'] / 10000000,
+                                                                  item['longitudeE7'] / 10000000,
+                                                                  lastloc['latitudeE7'] / 10000000,
+                                                                  lastloc['longitudeE7'] / 10000000)
                         if timedelta > 10 or distancedelta > 40:
                             # No points for 10 minutes or 40km in under 10m? Start a new track.
                             f_out.write("    </trkseg>\n")
                             f_out.write("  </trk>\n")
                             f_out.write("  <trk>\n")
                             f_out.write("    <trkseg>\n")
-                    f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
+                    f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (
+                        item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
                     if "altitude" in item:
                         f_out.write("        <ele>%d</ele>\n" % item["altitude"])
-                    f_out.write("        <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                    f_out.write("        <time>%s</time>\n" % str(
+                        datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
                     if "accuracy" in item or "speed" in item:
                         f_out.write("        <desc>\n")
                         if "accuracy" in item:
@@ -204,20 +263,20 @@ def main():
 
 
 # Haversine formula
-def getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2):
-    R = 6371 # Radius of the earth in km
-    dlat = deg2rad(lat2-lat1)
-    dlon = deg2rad(lon2-lon1)
-    a = math.sin(dlat/2) * math.sin(dlat/2) + \
-    math.cos(deg2rad(lat1)) * math.cos(deg2rad(lat2)) * \
-    math.sin(dlon/2) * math.sin(dlon/2)
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    d = R * c # Distance in km
+def getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2):
+    R = 6371  # Radius of the earth in km
+    dlat = deg2rad(lat2 - lat1)
+    dlon = deg2rad(lon2 - lon1)
+    a = math.sin(dlat / 2) * math.sin(dlat / 2) + \
+        math.cos(deg2rad(lat1)) * math.cos(deg2rad(lat2)) * \
+        math.sin(dlon / 2) * math.sin(dlon / 2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    d = R * c  # Distance in km
     return d
 
 
 def deg2rad(deg):
-    return deg * (math.pi/180)
+    return deg * (math.pi / 180)
 
 
 if __name__ == "__main__":

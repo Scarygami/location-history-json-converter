@@ -21,6 +21,7 @@ optional arguments:
   -s, --startdate STARTDATE                     The Start Date - format YYYY-MM-DD (0h00)
   -e, --enddate ENDDATE                         The End Date - format YYYY-MM-DD (0h00)
   -c, --chronological                           Sort items in chronological order
+  -p --polygon                                   Enter a list of points (lat,lon) that create a polygon. If 2 points are given (bottomleft, top right) a rectangle is created
 
 ```
 
