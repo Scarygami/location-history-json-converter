@@ -64,7 +64,7 @@ def main():
     arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml",
                             help="Format of the output")
     arg_parser.add_argument("-v", "--variable", default="locationJsonData",
-                            help="Variable name to be used for js output.json")
+                            help="Variable name to be used for js output")
     arg_parser.add_argument('-s', "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=valid_date)
     arg_parser.add_argument('-e', "--enddate", help="The End Date - format YYYY-MM-DD (0h00)", type=valid_date)
     arg_parser.add_argument('-c', "--chronological", help="Sort items in chronological order", action="store_true")
