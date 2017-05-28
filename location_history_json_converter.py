@@ -116,8 +116,8 @@ def main():
             if len(args.polygon) == 2:
                 # create a Rectangul
                 [bottom_lx, top_rx] = args.polygon
-                [bottom_lx_lat, bottom_lx_lon] = bottom_lx.split(",")
-                [top_rx_lat, top_rx_lon] = top_rx.split(",")
+                [bottom_lx_lat, bottom_lx_lon] = bottom_lx
+                [top_rx_lat, top_rx_lon] = top_rx
                 ext = [(float(bottom_lx_lat), float(bottom_lx_lon)), (float(bottom_lx_lat), float(top_rx_lon)),
                        (float(top_rx_lat), float(top_rx_lon)), (float(top_rx_lat), float(bottom_lx_lon))]
 
