@@ -30,7 +30,7 @@ def valid_date(s):
         raise ArgumentTypeError(msg)
 
 def dateCheck(timestampms, startdate, enddate):
-    dt = datetime.fromtimestamp(int(timestampms) / 1000)
+    dt = datetime.utcfromtimestamp(int(timestampms) / 1000)
     if startdate and startdate > dt : return False
     if enddate and enddate < dt : return False
     return True
@@ -104,7 +104,7 @@ def main():
         if args.format == "csv":
             f_out.write("Time,Latitude,Longitude\n")
             for item in items:
-                f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
+                f_out.write(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                 f_out.write(",")
                 f_out.write("%s,%s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
 
@@ -117,7 +117,7 @@ def main():
                 f_out.write("    <Placemark>\n")
                 # Order of these tags is important to make valid KML: TimeStamp, ExtendedData, then Point
                 f_out.write("      <TimeStamp><when>")
-                f_out.write(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"))
+                f_out.write(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"))
                 f_out.write("</when></TimeStamp>\n")
                 if "accuracy" in item or "speed" in item or "altitude" in item:
                     f_out.write("      <ExtendedData>\n")
@@ -149,8 +149,8 @@ def main():
                     f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n"  % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
                     if "altitude" in item:
                         f_out.write("    <ele>%d</ele>\n" % item["altitude"])
-                    f_out.write("    <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
-                    f_out.write("    <desc>%s" % datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
+                    f_out.write("    <time>%s</time>\n" % str(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                    f_out.write("    <desc>%s" % datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
                     if "accuracy" in item or "speed" in item:
                         f_out.write(" (")
                         if "accuracy" in item:
@@ -182,7 +182,7 @@ def main():
                     f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
                     if "altitude" in item:
                         f_out.write("        <ele>%d</ele>\n" % item["altitude"])
-                    f_out.write("        <time>%s</time>\n" % str(datetime.fromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                    f_out.write("        <time>%s</time>\n" % str(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
                     if "accuracy" in item or "speed" in item:
                         f_out.write("        <desc>\n")
                         if "accuracy" in item:
