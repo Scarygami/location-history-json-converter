@@ -140,8 +140,9 @@ def main():
                 ]) + "\n")
 
         if args.format == "csvfullest":
-            f_out.write(separator.join(["Time","Latitude","Longitude","Accuracy","Altitude","VerticalAccuracy","Velocity","Heading","UNKNOWN","STILL","ON_FOOT",
-              "WALKING","RUNNING","IN_VEHICLE","ON_BICYCLE","IN_ROAD_VEHICLE","IN_RAIL_VEHICLE","IN_TWO_WHEELER_VEHICLE","IN_FOUR_WHEELER_VEHICLE"]) + "\n")
+            f_out.write(separator.join(["Time","Latitude","Longitude","Accuracy","Altitude","VerticalAccuracy","Velocity","Heading","DetectedActivities",
+                "UNKNOWN","STILL","TILTING","ON_FOOT","WALKING","RUNNING","IN_VEHICLE","ON_BICYCLE",
+                "IN_ROAD_VEHICLE","IN_RAIL_VEHICLE","IN_TWO_WHEELER_VEHICLE","IN_FOUR_WHEELER_VEHICLE"]) + "\n")
             for item in items:
                 f_out.write(separator.join([
                     datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
@@ -152,24 +153,26 @@ def main():
                     str(item.get("verticalAccuracy", "")), 
                     str(item.get("velocity", "")), 
                     str(item.get("heading", ""))
-                ]))                
+                ]) + separator)                
                 if "activity" in item:
-                  a = readActivity(item["activity"])  
+                  a = readActivity(item["activity"])
                   f_out.write(separator.join([
+                    str(len(a)),  
                     str(a.get("UNKNOWN", "")), 
-                    str(a.get("STILL", "")), 
+                    str(a.get("STILL", "")),
+                    str(a.get("TILTING", "")), 
                     str(a.get("ON_FOOT", "")), 
                     str(a.get("WALKING", "")), 
                     str(a.get("RUNNING", "")), 
                     str(a.get("IN_VEHICLE", "")), 
-                    str(a.get("ON_BICYCLE", "")), 
-                    str(a.get("IN_ROAD_VEHICLE", "")), 
-                    str(a.get("IN_RAIL_VEHICLE", "")),
-                    str(a.get("IN_TWO_WHEELER_VEHICLE", "")), 
+                    str(a.get("ON_BICYCLE", "")),
+                    str(a.get("IN_ROAD_VEHICLE", "")), 	
+                    str(a.get("IN_RAIL_VEHICLE", "")),	
+                    str(a.get("IN_TWO_WHEELER_VEHICLE", "")), 	
                     str(a.get("IN_FOUR_WHEELER_VEHICLE", ""))
                   ]) + "\n")    
                 else:
-                  f_out.write(separator.join([""] * 11) + "\n")    
+                  f_out.write("0" + separator.join([""] * 12) + "\n")
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
