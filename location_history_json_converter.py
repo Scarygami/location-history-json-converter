@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Copyright 2012-2017 Gerwin Sturm
+# Improvements 2019 Istratov Alexandre
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,15 +36,25 @@ def dateCheck(timestampms, startdate, enddate):
     if enddate and enddate < dt : return False
     return True
 
+def readActivity(arr):
+    ret = {}
+    if len(arr) == 1 and "activity" in arr[0]: 
+      items = arr[0]["activity"]
+      for item in items:
+          if "type" in item and "confidence" in item: 
+            ret[item["type"]] = item["confidence"]
+    return ret
+
 def main():
     arg_parser = ArgumentParser()
     arg_parser.add_argument("input", help="Input File (JSON)")
     arg_parser.add_argument("-o", "--output", help="Output File (will be overwritten!)")
-    arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "js", "gpx", "gpxtracks"], default="kml", help="Format of the output")
+    arg_parser.add_argument("-f", "--format", choices=["kml", "json", "csv", "csvfull", "csvfullest", "js", "gpx", "gpxtracks"], default="kml", help="Format of the output")
     arg_parser.add_argument("-v", "--variable", default="locationJsonData", help="Variable name to be used for js output")
     arg_parser.add_argument('-s', "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=valid_date)
     arg_parser.add_argument('-e', "--enddate", help="The End Date - format YYYY-MM-DD (0h00)", type=valid_date)
     arg_parser.add_argument('-c', "--chronological", help="Sort items in chronological order", action="store_true")
+    arg_parser.add_argument('-w', "--semicolon", help="Use semicolon instead of colon in CSV files", action="store_true")
     args = arg_parser.parse_args()
 
     if not args.output: #if the output file is not specified, set to input filename with a diffrent extension
@@ -80,6 +91,10 @@ def main():
         if args.chronological:
             items = sorted(items, key=lambda item: item["timestampMs"])
 
+        separator = ","
+        if args.semicolon:
+            separator = ";"        
+
         if args.format == "json" or args.format == "js":
             if args.format == "js":
                 f_out.write("window.%s = " % args.variable)
@@ -102,11 +117,59 @@ def main():
                 f_out.write(";")
 
         if args.format == "csv":
-            f_out.write("Time,Latitude,Longitude\n")
+            f_out.write(separator.join(["Time","Latitude","Longitude"]) + "\n")
             for item in items:
-                f_out.write(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
-                f_out.write(",")
-                f_out.write("%s,%s\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
+                f_out.write(separator.join([
+                    datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                   "%.8f" % (item["latitudeE7"] / 10000000), 
+                   "%.8f" % (item["longitudeE7"] / 10000000)
+                ]) + "\n")
+
+        if args.format == "csvfull": 
+            f_out.write(separator.join(["Time","Latitude","Longitude","Accuracy","Altitude","VerticalAccuracy","Velocity","Heading"]) + "\n")
+            for item in items:
+                f_out.write(separator.join([
+                    datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                    "%.8f" % (item["latitudeE7"] / 10000000), 
+                    "%.8f" % (item["longitudeE7"] / 10000000), 
+                    str(item.get("accuracy", "")), 
+                    str(item.get("altitude", "")), 
+                    str(item.get("verticalAccuracy", "")), 
+                    str(item.get("velocity", "")), 
+                    str(item.get("heading", ""))
+                ]) + "\n")
+
+        if args.format == "csvfullest":
+            f_out.write(separator.join(["Time","Latitude","Longitude","Accuracy","Altitude","VerticalAccuracy","Velocity","Heading","UNKNOWN","STILL","ON_FOOT",
+              "WALKING","RUNNING","IN_VEHICLE","ON_BICYCLE","IN_ROAD_VEHICLE","IN_RAIL_VEHICLE","IN_TWO_WHEELER_VEHICLE","IN_FOUR_WHEELER_VEHICLE"]) + "\n")
+            for item in items:
+                f_out.write(separator.join([
+                    datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                    "%.8f" % (item["latitudeE7"] / 10000000), 
+                    "%.8f" % (item["longitudeE7"] / 10000000), 
+                    str(item.get("accuracy", "")), 
+                    str(item.get("altitude", "")), 
+                    str(item.get("verticalAccuracy", "")), 
+                    str(item.get("velocity", "")), 
+                    str(item.get("heading", ""))
+                ]))                
+                if "activity" in item:
+                  a = readActivity(item["activity"])  
+                  f_out.write(separator.join([
+                    str(a.get("UNKNOWN", "")), 
+                    str(a.get("STILL", "")), 
+                    str(a.get("ON_FOOT", "")), 
+                    str(a.get("WALKING", "")), 
+                    str(a.get("RUNNING", "")), 
+                    str(a.get("IN_VEHICLE", "")), 
+                    str(a.get("ON_BICYCLE", "")), 
+                    str(a.get("IN_ROAD_VEHICLE", "")), 
+                    str(a.get("IN_RAIL_VEHICLE", "")),
+                    str(a.get("IN_TWO_WHEELER_VEHICLE", "")), 
+                    str(a.get("IN_FOUR_WHEELER_VEHICLE", ""))
+                  ]) + "\n")    
+                else:
+                  f_out.write(separator.join([""] * 11) + "\n")    
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
