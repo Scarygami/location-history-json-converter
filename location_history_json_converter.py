@@ -91,6 +91,12 @@ def main():
         if args.chronological:
             items = sorted(items, key=lambda item: item["timestampMs"])
 
+        for item in items:
+            if item["latitudeE7"] > 1800000000:
+                item["latitudeE7"] = item["latitudeE7"] - 4294967296
+            if item["longitudeE7"] > 1800000000:
+                item["longitudeE7"] = item["longitudeE7"] - 4294967296
+
         separator = ","
         if args.semicolon:
             separator = ";"        
