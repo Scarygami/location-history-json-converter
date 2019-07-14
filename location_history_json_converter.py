@@ -109,15 +109,16 @@ def main():
             first = True
 
             for item in items:
-                if first:
-                    first = False
-                else:
-                    f_out.write(",")
-                f_out.write("{")
-                f_out.write("\"timestampMs\":%s," % item["timestampMs"])
-                f_out.write("\"latitudeE7\":%s," % item["latitudeE7"])
-                f_out.write("\"longitudeE7\":%s" % item["longitudeE7"])
-                f_out.write("}")
+                if 'longitudeE7' in item and 'latitudeE7' in item:
+                    if first:
+                        first = False
+                    else:
+                        f_out.write(",")
+                    f_out.write("{")
+                    f_out.write("\"timestampMs\":%s," % item["timestampMs"])
+                    f_out.write("\"latitudeE7\":%s," % item["latitudeE7"])
+                    f_out.write("\"longitudeE7\":%s" % item["longitudeE7"])
+                    f_out.write("}")
             f_out.write("]}")
             if args.format == "js":
                 f_out.write(";")
@@ -125,57 +126,60 @@ def main():
         if args.format == "csv":
             f_out.write(separator.join(["Time","Latitude","Longitude"]) + "\n")
             for item in items:
-                f_out.write(separator.join([
-                    datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
-                   "%.8f" % (item["latitudeE7"] / 10000000), 
-                   "%.8f" % (item["longitudeE7"] / 10000000)
-                ]) + "\n")
+                if 'longitudeE7' in item and 'latitudeE7' in item:
+                    f_out.write(separator.join([
+                        datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                       "%.8f" % (item["latitudeE7"] / 10000000), 
+                       "%.8f" % (item["longitudeE7"] / 10000000)
+                    ]) + "\n")
 
         if args.format == "csvfull": 
             f_out.write(separator.join(["Time","Latitude","Longitude","Accuracy","Altitude","VerticalAccuracy","Velocity","Heading"]) + "\n")
             for item in items:
-                f_out.write(separator.join([
-                    datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
-                    "%.8f" % (item["latitudeE7"] / 10000000), 
-                    "%.8f" % (item["longitudeE7"] / 10000000), 
-                    str(item.get("accuracy", "")), 
-                    str(item.get("altitude", "")), 
-                    str(item.get("verticalAccuracy", "")), 
-                    str(item.get("velocity", "")), 
-                    str(item.get("heading", ""))
-                ]) + "\n")
+                if 'longitudeE7' in item and 'latitudeE7' in item:
+                    f_out.write(separator.join([
+                        datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                        "%.8f" % (item["latitudeE7"] / 10000000), 
+                        "%.8f" % (item["longitudeE7"] / 10000000), 
+                        str(item.get("accuracy", "")), 
+                        str(item.get("altitude", "")), 
+                        str(item.get("verticalAccuracy", "")), 
+                        str(item.get("velocity", "")), 
+                        str(item.get("heading", ""))
+                    ]) + "\n")
 
         if args.format == "csvfullest":
             f_out.write(separator.join(["Time","Latitude","Longitude","Accuracy","Altitude","VerticalAccuracy","Velocity","Heading","UNKNOWN","STILL","ON_FOOT",
               "WALKING","RUNNING","IN_VEHICLE","ON_BICYCLE","IN_ROAD_VEHICLE","IN_RAIL_VEHICLE","IN_TWO_WHEELER_VEHICLE","IN_FOUR_WHEELER_VEHICLE"]) + "\n")
             for item in items:
-                f_out.write(separator.join([
-                    datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
-                    "%.8f" % (item["latitudeE7"] / 10000000), 
-                    "%.8f" % (item["longitudeE7"] / 10000000), 
-                    str(item.get("accuracy", "")), 
-                    str(item.get("altitude", "")), 
-                    str(item.get("verticalAccuracy", "")), 
-                    str(item.get("velocity", "")), 
-                    str(item.get("heading", ""))
-                ]))                
-                if "activity" in item:
-                  a = readActivity(item["activity"])  
-                  f_out.write(separator.join([
-                    str(a.get("UNKNOWN", "")), 
-                    str(a.get("STILL", "")), 
-                    str(a.get("ON_FOOT", "")), 
-                    str(a.get("WALKING", "")), 
-                    str(a.get("RUNNING", "")), 
-                    str(a.get("IN_VEHICLE", "")), 
-                    str(a.get("ON_BICYCLE", "")), 
-                    str(a.get("IN_ROAD_VEHICLE", "")), 
-                    str(a.get("IN_RAIL_VEHICLE", "")),
-                    str(a.get("IN_TWO_WHEELER_VEHICLE", "")), 
-                    str(a.get("IN_FOUR_WHEELER_VEHICLE", ""))
-                  ]) + "\n")    
-                else:
-                  f_out.write(separator.join([""] * 11) + "\n")    
+                if 'longitudeE7' in item and 'latitudeE7' in item:
+                    f_out.write(separator.join([
+                        datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                        "%.8f" % (item["latitudeE7"] / 10000000), 
+                        "%.8f" % (item["longitudeE7"] / 10000000), 
+                        str(item.get("accuracy", "")), 
+                        str(item.get("altitude", "")), 
+                        str(item.get("verticalAccuracy", "")), 
+                        str(item.get("velocity", "")), 
+                        str(item.get("heading", ""))
+                    ]))                
+                    if "activity" in item:
+                      a = readActivity(item["activity"])  
+                      f_out.write(separator.join([
+                        str(a.get("UNKNOWN", "")), 
+                        str(a.get("STILL", "")), 
+                        str(a.get("ON_FOOT", "")), 
+                        str(a.get("WALKING", "")), 
+                        str(a.get("RUNNING", "")), 
+                        str(a.get("IN_VEHICLE", "")), 
+                        str(a.get("ON_BICYCLE", "")), 
+                        str(a.get("IN_ROAD_VEHICLE", "")), 
+                        str(a.get("IN_RAIL_VEHICLE", "")),
+                        str(a.get("IN_TWO_WHEELER_VEHICLE", "")), 
+                        str(a.get("IN_FOUR_WHEELER_VEHICLE", ""))
+                      ]) + "\n")    
+                    else:
+                      f_out.write(separator.join([""] * 11) + "\n")    
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
@@ -183,28 +187,29 @@ def main():
             f_out.write("  <Document>\n")
             f_out.write("    <name>Location History</name>\n")
             for item in items:
-                f_out.write("    <Placemark>\n")
-                # Order of these tags is important to make valid KML: TimeStamp, ExtendedData, then Point
-                f_out.write("      <TimeStamp><when>")
-                f_out.write(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"))
-                f_out.write("</when></TimeStamp>\n")
-                if "accuracy" in item or "speed" in item or "altitude" in item:
-                    f_out.write("      <ExtendedData>\n")
-                    if "accuracy" in item:
-                        f_out.write("        <Data name=\"accuracy\">\n")
-                        f_out.write("          <value>%d</value>\n" % item["accuracy"])
-                        f_out.write("        </Data>\n")
-                    if "speed" in item:
-                        f_out.write("        <Data name=\"speed\">\n")
-                        f_out.write("          <value>%d</value>\n" % item["speed"])
-                        f_out.write("        </Data>\n")
-                    if "altitude" in item:
-                        f_out.write("        <Data name=\"altitude\">\n")
-                        f_out.write("          <value>%d</value>\n" % item["altitude"])
-                        f_out.write("        </Data>\n")
-                    f_out.write("      </ExtendedData>\n")
-                f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitudeE7"] / 10000000, item["latitudeE7"] / 10000000))
-                f_out.write("    </Placemark>\n")
+                if 'longitudeE7' in item and 'latitudeE7' in item:
+                    f_out.write("    <Placemark>\n")
+                    # Order of these tags is important to make valid KML: TimeStamp, ExtendedData, then Point
+                    f_out.write("      <TimeStamp><when>")
+                    f_out.write(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"))
+                    f_out.write("</when></TimeStamp>\n")
+                    if "accuracy" in item or "speed" in item or "altitude" in item:
+                        f_out.write("      <ExtendedData>\n")
+                        if "accuracy" in item:
+                            f_out.write("        <Data name=\"accuracy\">\n")
+                            f_out.write("          <value>%d</value>\n" % item["accuracy"])
+                            f_out.write("        </Data>\n")
+                        if "speed" in item:
+                            f_out.write("        <Data name=\"speed\">\n")
+                            f_out.write("          <value>%d</value>\n" % item["speed"])
+                            f_out.write("        </Data>\n")
+                        if "altitude" in item:
+                            f_out.write("        <Data name=\"altitude\">\n")
+                            f_out.write("          <value>%d</value>\n" % item["altitude"])
+                            f_out.write("        </Data>\n")
+                        f_out.write("      </ExtendedData>\n")
+                    f_out.write("      <Point><coordinates>%s,%s</coordinates></Point>\n" % (item["longitudeE7"] / 10000000, item["latitudeE7"] / 10000000))
+                    f_out.write("    </Placemark>\n")
             f_out.write("  </Document>\n</kml>\n")
 
         if args.format == "gpx" or args.format == "gpxtracks":
@@ -215,22 +220,23 @@ def main():
             f_out.write("  </metadata>\n")
             if args.format == "gpx":
                 for item in items:
-                    f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n"  % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
-                    if "altitude" in item:
-                        f_out.write("    <ele>%d</ele>\n" % item["altitude"])
-                    f_out.write("    <time>%s</time>\n" % str(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
-                    f_out.write("    <desc>%s" % datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
-                    if "accuracy" in item or "speed" in item:
-                        f_out.write(" (")
-                        if "accuracy" in item:
-                            f_out.write("Accuracy: %d" % item["accuracy"])
-                        if "accuracy" in item and "speed" in item:
-                            f_out.write(", ")
-                        if "speed" in item:
-                            f_out.write("Speed:%d" % item["speed"])
-                        f_out.write(")")
-                    f_out.write("</desc>\n")
-                    f_out.write("  </wpt>\n")
+                    if 'longitudeE7' in item and 'latitudeE7' in item:
+                        f_out.write("  <wpt lat=\"%s\" lon=\"%s\">\n"  % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
+                        if "altitude" in item:
+                            f_out.write("    <ele>%d</ele>\n" % item["altitude"])
+                        f_out.write("    <time>%s</time>\n" % str(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                        f_out.write("    <desc>%s" % datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"))
+                        if "accuracy" in item or "speed" in item:
+                            f_out.write(" (")
+                            if "accuracy" in item:
+                                f_out.write("Accuracy: %d" % item["accuracy"])
+                            if "accuracy" in item and "speed" in item:
+                                f_out.write(", ")
+                            if "speed" in item:
+                                f_out.write("Speed:%d" % item["speed"])
+                            f_out.write(")")
+                        f_out.write("</desc>\n")
+                        f_out.write("  </wpt>\n")
             if args.format == "gpxtracks":
                 f_out.write("  <trk>\n")
                 f_out.write("    <trkseg>\n")
@@ -239,28 +245,29 @@ def main():
                 # If it's not, use the '--chronological' option or uncomment this:
                 # items = sorted(data["data"]["items"], key=lambda x: x['timestampMs'], reverse=True)
                 for item in items:
-                    if lastloc:
-                        timedelta = abs((int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60)
-                        distancedelta = getDistanceFromLatLonInKm(item['latitudeE7'] / 10000000, item['longitudeE7'] / 10000000, lastloc['latitudeE7'] / 10000000, lastloc['longitudeE7'] / 10000000)
-                        if timedelta > 10 or distancedelta > 40:
-                            # No points for 10 minutes or 40km in under 10m? Start a new track.
-                            f_out.write("    </trkseg>\n")
-                            f_out.write("  </trk>\n")
-                            f_out.write("  <trk>\n")
-                            f_out.write("    <trkseg>\n")
-                    f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
-                    if "altitude" in item:
-                        f_out.write("        <ele>%d</ele>\n" % item["altitude"])
-                    f_out.write("        <time>%s</time>\n" % str(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
-                    if "accuracy" in item or "speed" in item:
-                        f_out.write("        <desc>\n")
-                        if "accuracy" in item:
-                            f_out.write("          Accuracy: %d\n" % item["accuracy"])
-                        if "speed" in item:
-                            f_out.write("          Speed:%d\n" % item["speed"])
-                        f_out.write("        </desc>\n")
-                    f_out.write("      </trkpt>\n")
-                    lastloc = item
+                    if 'longitudeE7' in item and 'latitudeE7' in item:
+                        if lastloc:
+                            timedelta = abs((int(item['timestampMs']) - int(lastloc['timestampMs'])) / 1000 / 60)
+                            distancedelta = getDistanceFromLatLonInKm(item['latitudeE7'] / 10000000, item['longitudeE7'] / 10000000, lastloc['latitudeE7'] / 10000000, lastloc['longitudeE7'] / 10000000)
+                            if timedelta > 10 or distancedelta > 40:
+                                # No points for 10 minutes or 40km in under 10m? Start a new track.
+                                f_out.write("    </trkseg>\n")
+                                f_out.write("  </trk>\n")
+                                f_out.write("  <trk>\n")
+                                f_out.write("    <trkseg>\n")
+                        f_out.write("      <trkpt lat=\"%s\" lon=\"%s\">\n" % (item["latitudeE7"] / 10000000, item["longitudeE7"] / 10000000))
+                        if "altitude" in item:
+                            f_out.write("        <ele>%d</ele>\n" % item["altitude"])
+                        f_out.write("        <time>%s</time>\n" % str(datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")))
+                        if "accuracy" in item or "speed" in item:
+                            f_out.write("        <desc>\n")
+                            if "accuracy" in item:
+                                f_out.write("          Accuracy: %d\n" % item["accuracy"])
+                            if "speed" in item:
+                                f_out.write("          Speed:%d\n" % item["speed"])
+                            f_out.write("        </desc>\n")
+                        f_out.write("      </trkpt>\n")
+                        lastloc = item
                 f_out.write("    </trkseg>\n")
                 f_out.write("  </trk>\n")
             f_out.write("</gpx>\n")
