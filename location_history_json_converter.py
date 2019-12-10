@@ -193,8 +193,8 @@ def main():
         if args.format == "csvfullest":
             f_out.write(separator.join([
                 "Time", "Latitude", "Longitude", "Accuracy", "Altitude", "VerticalAccuracy", "Velocity", "Heading",
-                "UNKNOWN", "STILL", "ON_FOOT", "WALKING", "RUNNING", "IN_VEHICLE", "ON_BICYCLE", "IN_ROAD_VEHICLE",
-                "IN_RAIL_VEHICLE", "IN_TWO_WHEELER_VEHICLE", "IN_FOUR_WHEELER_VEHICLE"
+                "DetectedActivties", "UNKNOWN", "STILL", "TILTING", "ON_FOOT", "WALKING", "RUNNING", "IN_VEHICLE",
+                "ON_BICYCLE", "IN_ROAD_VEHICLE", "IN_RAIL_VEHICLE", "IN_TWO_WHEELER_VEHICLE", "IN_FOUR_WHEELER_VEHICLE"
             ]) + "\n")
             for item in items:
                 if 'longitudeE7' in item and 'latitudeE7' in item:
@@ -207,12 +207,14 @@ def main():
                         str(item.get("verticalAccuracy", "")),
                         str(item.get("velocity", "")),
                         str(item.get("heading", ""))
-                    ]))
+                    ]) + separator)
                     if "activity" in item:
                         a = read_activity(item["activity"])
                         f_out.write(separator.join([
+                            str(len(a)),
                             str(a.get("UNKNOWN", "")),
                             str(a.get("STILL", "")),
+                            str(a.get("TILTING", "")),
                             str(a.get("ON_FOOT", "")),
                             str(a.get("WALKING", "")),
                             str(a.get("RUNNING", "")),
@@ -224,7 +226,7 @@ def main():
                             str(a.get("IN_FOUR_WHEELER_VEHICLE", ""))
                         ]) + "\n")
                     else:
-                        f_out.write(separator.join([""] * 11) + "\n")
+                        f_out.write("0" + separator.join([""] * 13) + "\n")
 
         if args.format == "kml":
             f_out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
