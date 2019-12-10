@@ -48,21 +48,3 @@ Data produced is valid GPX 1.1.  Points are stored as individual, unrelated wayp
 ##### gpxtracks
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
 Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
-
-### Licence
-
-```
-Copyright 2012-2017 Gerwin Sturm
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
