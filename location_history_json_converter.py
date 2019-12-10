@@ -112,7 +112,7 @@ def main():
 
     try:
         data = json.loads(json_data)
-    except json.JSONDecodeError as error:
+    except ValueError as error:
         print("Error decoding json: %s" % error)
         return
 
