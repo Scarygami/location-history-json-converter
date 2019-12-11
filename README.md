@@ -53,7 +53,16 @@ To be able to use this option you will have to install it with
 Using this option you can specify a list of coordinates to define a polygon,
 and only locations that are in this polygon will be added to the output file.
 
-This functionality is achieved using [Shapely](https://pypi.org/project/Shapely/).
+E.g `-p 43.665,10.334 43.815,10.492` to only include locations in the rectangle
+defined by the two corner points.
+
+If you have negative latitudes you will need to but the coordinate in quotes
+with an extra space before the minus sign, so that `argparse` can detect read
+the arguments correctly.
+
+    --polygon 20,-70 " -20,-50"
+
+The polygon filtering is achieved using [Shapely](https://pypi.org/project/Shapely/).
 
 To be able to use this option you will have to install it with
 
