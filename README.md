@@ -8,25 +8,29 @@ You will need to have Python installed and know a little bit about running scrip
 
 ### Usage
 ```
-location_history_json_converter.py input output [-h] [-f {kml,json,csv,csvfull,csvfullest,js,gpx,gpxtracks}]
+location_history_json_converter.py input output [-h] [-f {format, see below}]
 
 input                Input File (JSON)
 output               Output File (will be overwritten!)
 
 optional arguments:
-  -h, --help                                                       Show this help message and exit
-  -f, --format {kml,json,csv,csvfull,csvfullest,js,gpx,gpxtracks}  Format of the output
-  -v, --variable                                                   Variable name for js export
-  -s, --startdate STARTDATE                                        The Start Date - format YYYY-MM-DD (0h00)
-  -e, --enddate ENDDATE                                            The End Date - format YYYY-MM-DD (0h00)
-  -c, --chronological                                              Sort items in chronological order
+  -h, --help                          Show this help message and exit
+  -f, --format {format, see below}    Format of the output
+  -v, --variable                      Variable name for js export
+  -s, --startdate STARTDATE           The Start Date - format YYYY-MM-DD (0h00)
+  -e, --enddate ENDDATE               The End Date - format YYYY-MM-DD (0h00)
+  -c, --chronological                 Sort items in chronological order
+  --separator SEPARATOR               Separator to be used for CSV formats, defaults to comma
+  -i, --iterative                     Loads the JSON file iteratively, to be able to handle bigger files
 
 ```
 
 ### Available formats
 
 ##### kml (default)
-KML file with placemarks for each location in your Location History.  Each placemark will have a location, a timestamp, and accuracy/speed/altitude as available.  Data produced is valid KML 2.2.
+KML file with placemarks for each location in your Location History.
+Each placemark will have a location, a timestamp, and accuracy/speed/altitude as available.
+Data produced is valid KML 2.2.
 
 ##### csv
 Comma-separated text file with a timestamp field and a location field, suitable for upload to Fusion Tables.
@@ -45,6 +49,11 @@ JavaScript file which sets a variable in global namespace (default: window.locat
 to the full data object for easy access in local scripts.
 Just include the js file before your actual script.
 Only timestamp and location are included.
+
+#### jsonfull, jsfull
+These types essentially make a full copy of the entries in the original JSON File in json or js format.
+With the option of filtering start and end date this can be used to create a smaller file in iterative mode,
+that can then be handled without iterative mode (necessary for gpxtracks and the chronological option).
 
 ##### gpx
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
