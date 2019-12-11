@@ -8,19 +8,18 @@ You will need to have Python installed and know a little bit about running scrip
 
 ### Usage
 ```
-location_history_json_converter.py inputFileName [-o] [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
+location_history_json_converter.py input output [-h] [-f {kml,json,csv,csvfull,csvfullest,js,gpx,gpxtracks}]
 
 input                Input File (JSON)
+output               Output File (will be overwritten!)
 
 optional arguments:
-  -o, --output                                  Name of the output file (will be overwritten without prompt!)
-                                                If left unspecified, the output file name will default to replacing the input file name's extension
-  -h, --help                                    Show this help message and exit
-  -f, --format {kml,json,csv,js,gpx,gpxtracks}  Format of the output
-  -v, --variable                                Variable name for js export
-  -s, --startdate STARTDATE                     The Start Date - format YYYY-MM-DD (0h00)
-  -e, --enddate ENDDATE                         The End Date - format YYYY-MM-DD (0h00)
-  -c, --chronological                           Sort items in chronological order
+  -h, --help                                                       Show this help message and exit
+  -f, --format {kml,json,csv,csvfull,csvfullest,js,gpx,gpxtracks}  Format of the output
+  -v, --variable                                                   Variable name for js export
+  -s, --startdate STARTDATE                                        The Start Date - format YYYY-MM-DD (0h00)
+  -e, --enddate ENDDATE                                            The End Date - format YYYY-MM-DD (0h00)
+  -c, --chronological                                              Sort items in chronological order
 
 ```
 
@@ -31,6 +30,12 @@ KML file with placemarks for each location in your Location History.  Each place
 
 ##### csv
 Comma-separated text file with a timestamp field and a location field, suitable for upload to Fusion Tables.
+
+##### csvfull
+Comma-separated text file with all location information, excluding activities
+
+##### csvfullest
+Comma-separated text file with all location information, including activities
 
 ##### json
 Smaller JSON file with only the timestamp and the location.
