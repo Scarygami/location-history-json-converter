@@ -32,6 +32,13 @@ except ImportError:
 else:
     ijson_available = True
 
+try:
+    from shapely.geometry import Point, Polygon
+except ImportError:
+    shapely_available = False
+else:
+    shapely_available = True
+
 
 def _valid_date(s):
     try:
@@ -39,6 +46,21 @@ def _valid_date(s):
     except ValueError:
         msg = "Not a valid date: '{0}'.".format(s)
         raise ArgumentTypeError(msg)
+
+
+def _valid_polygon(s):
+    try:
+        [lat, lon] = s.split(",")
+        return float(lat), float(lon)
+    except ValueError:
+        msg = "Not a valid point: '{0}'.".format(s)
+        raise ArgumentTypeError(msg)
+
+
+def _check_point(polygon, lat, lon):
+    """Returns true if the point specified by lat and lon is inside the polygon"""
+    point = Point(lat / 10000000, lon / 10000000)
+    return polygon.contains(point)
 
 
 def _read_activity(arr):
@@ -52,7 +74,7 @@ def _read_activity(arr):
 
 
 def _distance(lat1, lon1, lat2, lon2):
-    """ Returns the distance between to two coordinates in km using the Haversine formula"""
+    """Returns the distance between to two coordinates in km using the Haversine formula"""
 
     R = 6371  # Radius of the earth in km
     dlat = _deg2rad(lat2-lat1)
@@ -303,7 +325,7 @@ def _write_footer(output, format):
 
 def convert(locations, output, format="kml",
             js_variable="locationJsonData", separator=",",
-            start_date=None, end_date=None, accuracy=None,
+            start_date=None, end_date=None, accuracy=None, polygon=None,
             chronological=False):
     """Converts the provided locations to the specified format
 
@@ -336,6 +358,9 @@ def convert(locations, output, format="kml",
     accuracy: int
         Locations with a higher accuracy value (i.e. worse accuracy) will be ignored
 
+    polygon: shapely.Polygon
+        All locations outside of the Polygon will be ignored
+
     chronological: bool
         Whether to sort all timestamps in chronological order (required for gpxtracks)
         This might be uncessary since recent Takeout data seems properly sorted already.
@@ -367,6 +392,9 @@ def convert(locations, output, format="kml",
                 # If locations are sorted and we are past the enddate there are no further locations to be expected
                 # This could probably be the default behavior
                 break
+            continue
+
+        if polygon and not _check_point(polygon, item["latitudeE7"], item["longitudeE7"]):
             continue
 
         # Fix overflows in Google Takeout data:
@@ -428,11 +456,45 @@ def main():
         help="Separator to be used for CSV formats, defaults to comma"
     )
 
+    arg_parser.add_argument(
+        '-p', "--polygon",
+        help="List of points (lat, lon) that create a polygon. " +
+             "If two points are given a rectangle is created.",
+        metavar="lat,lon",
+        nargs='*',
+        type=_valid_polygon
+    )
+
     args = arg_parser.parse_args()
 
     if args.input == args.output:
         arg_parser.error("Input and output have to be different files")
         return
+
+    if args.polygon and len(args.polygon) < 2:
+        arg_parser.error("Polygon needs at least 2 points to create a rectangule (bottom left and top right)")
+        return
+
+    polygon = None
+    if args.polygon:
+        if not shapely_available:
+            print("shapely is not available. Please install with `pip install shapely` and try again.")
+            return
+
+        if len(args.polygon) == 2:
+            point1, point2 = args.polygon
+            lat1, lon1 = point1
+            lat2, lon2 = point2
+            ext = [
+                (float(min(lat1, lat2)), float(min(lon1, lon2))),
+                (float(max(lat1, lat2)), float(min(lon1, lon2))),
+                (float(max(lat1, lat2)), float(max(lon1, lon2))),
+                (float(min(lat1, lat2)), float(max(lon1, lon2)))
+            ]
+        else:
+            ext = [(elem.split(",")[0], elem.split(",")[1]) for elem in args.polygon]
+
+        polygon = Polygon(ext)
 
     if args.iterative:
         if args.chronological:
@@ -457,7 +519,7 @@ def main():
                 return
 
         if not ijson_available:
-            print("ijson is not available. Please install with `pip install ijson` and try again\n")
+            print("ijson is not available. Please install with `pip install ijson` and try again.")
             return
 
         items = ijson.items(open(args.input, "r"), "locations.item")
@@ -497,6 +559,7 @@ def main():
         start_date=args.startdate,
         end_date=args.enddate,
         accuracy=args.accuracy,
+        polygon=polygon,
         chronological=args.chronological
     )
 
