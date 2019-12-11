@@ -4,66 +4,103 @@ This Python script takes the JSON file of your location history which you can ge
 [Google Takeout](https://takeout.google.com/settings/takeout/custom/location_history)
 and converts it into other formats.
 
-You will need to have Python installed and know a little bit about running scripts from the command line.
+### Requirements
+
+*  [Install python](https://wiki.python.org/moin/BeginnersGuide/Download) (2.7+/3.2+) if you don't have it installed already.
+
+*  Download the python script by either cloning this repository
+   (`git clone https://github.com/Scarygami/location-history-json-converter`)
+   or [downloading the script file](https://raw.githubusercontent.com/Scarygami/location-history-json-converter/master/location_history_json_converter.py).
+
+*  Request your location history via [Google Takeout](https://takeout.google.com/settings/takeout/custom/location_history)
+   and once the package is ready, download and unzip it.
+
+   I find it easiest to place the `Location History.json` in the same folder where the script is located.
 
 ### Usage
 ```
-location_history_json_converter.py inputFileName [-o] [-h] [-f {kml,json,csv,js,gpx,gpxtracks}] [-v]
+python location_history_json_converter.py input output [-h] [-f {format, see below}]
 
-input                Input File (JSON)
+input                Input File (Location History.json)
+output               Output File (will be overwritten!)
 
 optional arguments:
-  -o, --output                                  Name of the output file (will be overwritten without prompt!)
-                                                If left unspecified, the output file name will default to replacing the input file name's extension
-  -h, --help                                    Show this help message and exit
-  -f, --format {kml,json,csv,js,gpx,gpxtracks}  Format of the output
-  -v, --variable                                Variable name for js export
-  -s, --startdate STARTDATE                     The Start Date - format YYYY-MM-DD (0h00)
-  -e, --enddate ENDDATE                         The End Date - format YYYY-MM-DD (0h00)
-  -c, --chronological                           Sort items in chronological order
-  -p --polygon                                   Enter a list of points (lat,lon) that create a polygon. If 2 points are given (bottomleft, top right) a rectangle is created
-
+  -h, --help                             Show this help message and exit
+  -f, --format {format, see below}       Format of the output
+  -i, --iterative                        Loads the JSON file iteratively
+  -s, --startdate STARTDATE              The Start Date - format YYYY-MM-DD (0h00)
+  -e, --enddate ENDDATE                  The End Date - format YYYY-MM-DD (0h00)
+  -a, --accuracy ACCURACY                Maximum Accuracy (in meters), lower is better
+  -c, --chronological                    Sort items in chronological order
+  -v, --variable VARIABLE                Variable name for js export
+      --separator SEPARATOR              Separator to be used for CSV formats, defaults to comma
+  -p, --polygon [lat,lon [lat,lon ...]]  List of points (lat, lon) that create a polygon.
+                                         If two points are given a rectangle is created.
 ```
+
+### Special requirements for some options
+
+#### `-i, --iterative`
+
+The iterative parsing mode is achieved using the [ijson](https://pypi.org/project/ijson/).
+
+To be able to use this option you will have to install it with
+
+    pip install ijson
+
+#### `-p, --polygon`
+
+Using this option you can specify a list of coordinates to define a polygon,
+and only locations that are in this polygon will be added to the output file.
+
+This functionality is achieved using [Shapely](https://pypi.org/project/Shapely/).
+
+To be able to use this option you will have to install it with
+
+    pip install Shapely
+
+On Windows this command will most likely fail. Instead you can download a wheel
+that matches your OS and Python Version from https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely
+
+You can then install Shapely using this command:
+
+    python -m pip install Shapely-X-cpX-cpXm-winX.whl
+
 
 ### Available formats
 
-##### kml (default)
-KML file with placemarks for each location in your Location History.  Each placemark will have a location, a timestamp, and accuracy/speed/altitude as available.  Data produced is valid KML 2.2.
+#### kml (default)
+KML file with placemarks for each location in your Location History.
+Each placemark will have a location, a timestamp, and accuracy/speed/altitude as available.
+Data produced is valid KML 2.2.
 
-##### csv
+#### csv
 Comma-separated text file with a timestamp field and a location field, suitable for upload to Fusion Tables.
 
-##### json
+#### csvfull
+Comma-separated text file with all location information, excluding activities
+
+#### csvfullest
+Comma-separated text file with all location information, including activities
+
+#### json
 Smaller JSON file with only the timestamp and the location.
 
-##### js
+#### js
 JavaScript file which sets a variable in global namespace (default: window.locationJsonData)
 to the full data object for easy access in local scripts.
 Just include the js file before your actual script.
 Only timestamp and location are included.
 
-##### gpx
+#### jsonfull, jsfull
+These types essentially make a full copy of the entries in the original JSON File in json or js format.
+With the option of filtering start and end date this can be used to create a smaller file in iterative mode,
+that can then be handled without iterative mode (necessary for gpxtracks and the chronological option).
+
+#### gpx
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
 Data produced is valid GPX 1.1.  Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks).
 
-##### gpxtracks
+#### gpxtracks
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
 Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
-
-### Licence
-
-```
-Copyright 2012-2017 Gerwin Sturm
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
