@@ -32,13 +32,6 @@ except ImportError:
 else:
     ijson_available = True
 
-try:
-    from shapely.geometry import Polygon, Point
-except ImportError:
-    shapely_available = False
-else:
-    shapely_available = True
-
 
 def _valid_date(s):
     try:
@@ -46,15 +39,6 @@ def _valid_date(s):
     except ValueError:
         msg = "Not a valid date: '{0}'.".format(s)
         raise ArgumentTypeError(msg)
-
-
-def _check_date(timestampms, startdate, enddate):
-    dt = datetime.utcfromtimestamp(int(timestampms) / 1000)
-    if startdate and startdate > dt:
-        return False
-    if enddate and enddate < dt:
-        return False
-    return True
 
 
 def _read_activity(arr):
@@ -317,8 +301,10 @@ def _write_footer(output, format):
         return
 
 
-def convert(locations, output, format="kml", js_variable="locationJsonData",
-            start_date=None, end_date=None, chronological=False, separator=","):
+def convert(locations, output, format="kml",
+            js_variable="locationJsonData", separator=",",
+            start_date=None, end_date=None, accuracy=None,
+            chronological=False):
     """Converts the provided locations to the specified format
 
     Parameters
@@ -338,34 +324,53 @@ def convert(locations, output, format="kml", js_variable="locationJsonData",
     js_variable: str
         Variable name to be used for js output
 
+    separator: str
+        What separator to use for the csv formats
+
     start_date: datetime
         Locations before this date will be ignored
 
     end_date: datetime
         Locations after this date will be ignored
 
+    accuracy: int
+        Locations with a higher accuracy value (i.e. worse accuracy) will be ignored
+
     chronological: bool
         Whether to sort all timestamps in chronological order (required for gpxtracks)
-
-    separator: str
-        What separator to use for the csv formats
+        This might be uncessary since recent Takeout data seems properly sorted already.
     """
 
-    if chronological or format == "gpxtracks":
+    if chronological:
         locations = sorted(locations, key=lambda item: item["timestampMs"])
 
     _write_header(output, format, js_variable, separator)
 
     first = True
     last_loc = None
+    added = 0
+    print("Progress:")
     for item in locations:
-        if 'longitudeE7' not in item or 'latitudeE7' not in item:
+        if "longitudeE7" not in item or "latitudeE7" not in item or "timestampMs" not in item:
             continue
-        if start_date or end_date:
-            if not _check_date(item["timestampMs"], start_date, end_date):
-                continue
+
+        time = datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000)
+        print("\r%s / Locations written: %s" % (time.strftime("%Y-%m-%d %H:%M"), added), end="")
+
+        if "accuracy" in item and item["accuracy"] > accuracy:
+            continue
+
+        if start_date and start_date > time:
+            continue
+        if end_date and end_date < time:
+            if chronological:
+                # If locations are sorted and we are past the enddate there are no further locations to be expected
+                # This could probably be the default behavior
+                break
+            continue
 
         # Fix overflows in Google Takeout data:
+        # https://gis.stackexchange.com/questions/318918/latitude-and-longitude-values-in-google-takeout-location-history-data-sometimes
         if item["latitudeE7"] > 1800000000:
             item["latitudeE7"] = item["latitudeE7"] - 4294967296
         if item["longitudeE7"] > 1800000000:
@@ -376,14 +381,17 @@ def convert(locations, output, format="kml", js_variable="locationJsonData",
         if first:
             first = False
         last_loc = item
+        added = added + 1
 
     _write_footer(output, format)
+    print("")
 
 
 def main():
     arg_parser = ArgumentParser()
-    arg_parser.add_argument("input", help="Input File (JSON)")
+    arg_parser.add_argument("input", help="Input File (Location History.json)")
     arg_parser.add_argument("output", help="Output File (will be overwritten!)")
+
     arg_parser.add_argument(
         "-f",
         "--format",
@@ -391,20 +399,33 @@ def main():
         default="kml",
         help="Format of the output"
     )
-    arg_parser.add_argument(
-        "-v",
-        "--variable",
-        default="locationJsonData",
-        help="Variable name to be used for js output"
-    )
-    arg_parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=_valid_date)
-    arg_parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD (0h00)", type=_valid_date)
-    arg_parser.add_argument("-c", "--chronological", help="Sort items in chronological order", action="store_true")
-    arg_parser.add_argument("--separator", help="Separator to be used for CSV formats, defaults to comma", default=",")
+
     arg_parser.add_argument(
         "-i", "--iterative",
         help="Loads the JSON file iteratively, to be able to handle bigger files",
         action="store_true"
+    )
+
+    arg_parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=_valid_date)
+    arg_parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD (0h00)", type=_valid_date)
+    arg_parser.add_argument("-a", "--accuracy", help="Maximum accuracy (in meters), lower is better.", type=int)
+
+    arg_parser.add_argument(
+        "-c", "--chronological",
+        help="Sort items in chronological order (might be unnessary)",
+        action="store_true"
+    )
+
+    arg_parser.add_argument(
+        "-v", "--variable",
+        default="locationJsonData",
+        help="Variable name to be used for js output"
+    )
+
+    arg_parser.add_argument(
+        "--separator",
+        default=",",
+        help="Separator to be used for CSV formats, defaults to comma"
     )
 
     args = arg_parser.parse_args()
@@ -414,13 +435,26 @@ def main():
         return
 
     if args.iterative:
-        if args.chronological or args.format == "gpxtracks":
-            print("Iterative mode doesn't work when chronological is activated, or format is gpxtrack.")
-            print("If your file is too big to be handled without iterative mode you can create a smaller file")
-            print("using jsonfull format with filters for start and end date in iterative mode:")
-            print("-f jsonfull -s YYYY-MM-DD -e YYYY-MM-DD -i")
-            print("You can then use the generated file with chronological or gpxtrack option without iterative mode.")
-            return
+        if args.chronological:
+            print("-----------------------------------")
+            print("Please note that iterative mode doesn't really work when chronological is activated,")
+            print("since all locations need to be fetched first to be able to sort them.")
+            print("The setting might also be unnessary since recent Google Takeout data already seems properly sorted.")
+            print("")
+            print("If you need to use this setting you can instead create a smaller JSON file")
+            print("using jsonfull format with filters for start date, end date and accuracy in iterative mode:")
+            print("")
+            print("%s %s small.json -f jsonfull -i -s YYYY-MM-DD -e YYYY-MM-DD -a ACCURACY" % (sys.argv[0], args.input))
+            print("")
+            print("You can then use the generated smaller JSON file with --chronological but without --iterative")
+            print("")
+            print("%s small.json %s -f %s -c" % (sys.argv[0], args.output, args.format))
+            print("")
+            print("---------------------------------------------------------------------------------------------")
+            print("")
+            answer = input("Do you want to continue anyway (y/N)? ").upper()
+            if answer != "Y" and answer != "YES":
+                return
 
         if not ijson_available:
             print("ijson is not available. Please install with `pip install ijson` and try again\n")
@@ -453,7 +487,18 @@ def main():
         print("Error creating output file for writing: %s" % error)
         return
 
-    convert(items, f_out, args.format, args.variable, args.startdate, args.enddate, args.chronological, args.separator)
+    if args.enddate:
+        args.enddate = args.enddate.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    convert(
+        items, f_out,
+        format=args.format,
+        js_variable=args.variable,
+        start_date=args.startdate,
+        end_date=args.enddate,
+        accuracy=args.accuracy,
+        chronological=args.chronological
+    )
 
     f_out.close()
 

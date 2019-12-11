@@ -4,23 +4,35 @@ This Python script takes the JSON file of your location history which you can ge
 [Google Takeout](https://takeout.google.com/settings/takeout/custom/location_history)
 and converts it into other formats.
 
-You will need to have Python installed and know a little bit about running scripts from the command line.
+### Requirements
+
+*  [Install python](https://wiki.python.org/moin/BeginnersGuide/Download) (2.7+/3.2+) if you don't have it installed already.
+
+*  Download the python script by either cloning this repository
+   (`git clone https://github.com/Scarygami/location-history-json-converter`)
+   or [downloading the script file](https://raw.githubusercontent.com/Scarygami/location-history-json-converter/master/location_history_json_converter.py).
+
+*  Request your location history via [Google Takeout](https://takeout.google.com/settings/takeout/custom/location_history)
+   and once the package is ready, download and unzip it.
+
+   I find it easiest to place the `Location History.json` in the same folder where the script is located.
 
 ### Usage
 ```
-location_history_json_converter.py input output [-h] [-f {format, see below}]
+python location_history_json_converter.py input output [-h] [-f {format, see below}]
 
-input                Input File (JSON)
+input                Input File (Location History.json)
 output               Output File (will be overwritten!)
 
 optional arguments:
   -h, --help                          Show this help message and exit
   -f, --format {format, see below}    Format of the output
-  -v, --variable                      Variable name for js export
+  -v, --variable VARIABLE             Variable name for js export
   -s, --startdate STARTDATE           The Start Date - format YYYY-MM-DD (0h00)
   -e, --enddate ENDDATE               The End Date - format YYYY-MM-DD (0h00)
+  -a, --accuracy ACCURACY             Maximum Accuracy (in meters), lower is better
   -c, --chronological                 Sort items in chronological order
-  --separator SEPARATOR               Separator to be used for CSV formats, defaults to comma
+      --separator SEPARATOR           Separator to be used for CSV formats, defaults to comma
   -i, --iterative                     Loads the JSON file iteratively, to be able to handle bigger files
 
 ```
@@ -50,7 +62,7 @@ to the full data object for easy access in local scripts.
 Just include the js file before your actual script.
 Only timestamp and location are included.
 
-#### jsonfull, jsfull
+##### jsonfull, jsfull
 These types essentially make a full copy of the entries in the original JSON File in json or js format.
 With the option of filtering start and end date this can be used to create a smaller file in iterative mode,
 that can then be handled without iterative mode (necessary for gpxtracks and the chronological option).
