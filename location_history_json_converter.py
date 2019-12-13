@@ -146,7 +146,7 @@ def _write_location(output, format, location, separator, first, last_location):
             output.write(",")
 
         item = {
-            "timestampMS": location["timestampMs"],
+            "timestampMs": location["timestampMs"],
             "latitudeE7": location["latitudeE7"],
             "longitudeE7": location["longitudeE7"]
         }
