@@ -6,7 +6,7 @@ and converts it into other formats.
 
 ### Requirements
 
-*  [Install python](https://wiki.python.org/moin/BeginnersGuide/Download) (2.7+/3.2+) if you don't have it installed already.
+*  [Install python](https://wiki.python.org/moin/BeginnersGuide/Download) (3.2+) if you don't have it installed already.
 
 *  Download the python script by either cloning this repository
    (`git clone https://github.com/Scarygami/location-history-json-converter`)
