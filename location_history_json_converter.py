@@ -382,12 +382,12 @@ def convert(locations, output, format="kml",
         time = datetime.utcfromtimestamp(int(item["timestampMs"]) / 1000)
         print("\r%s / Locations written: %s" % (time.strftime("%Y-%m-%d %H:%M"), added), end="")
 
-        if "accuracy" in item and item["accuracy"] > accuracy:
+        if accuracy is not None and "accuracy" in item and item["accuracy"] > accuracy:
             continue
 
-        if start_date and start_date > time:
+        if start_date is not None and start_date > time:
             continue
-        if end_date and end_date < time:
+        if end_date is not None and end_date < time:
             if chronological:
                 # If locations are sorted and we are past the enddate there are no further locations to be expected
                 # This could probably be the default behavior
@@ -472,7 +472,7 @@ def main():
         return
 
     if args.polygon and len(args.polygon) < 2:
-        arg_parser.error("Polygon needs at least 2 points to create a rectangule (bottom left and top right)")
+        arg_parser.error("Polygon needs at least 2 points to create a rectangle (bottom left and top right)")
         return
 
     polygon = None

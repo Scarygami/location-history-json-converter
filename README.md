@@ -57,7 +57,7 @@ E.g `-p 43.665,10.334 43.815,10.492` to only include locations in the rectangle
 defined by the two corner points.
 
 If you have negative latitudes you will need to but the coordinate in quotes
-with an extra space before the minus sign, so that `argparse` can detect read
+with an extra space before the minus sign, so that `argparse` can detect and read
 the arguments correctly.
 
     --polygon 20,-70 " -20,-50"
