@@ -441,8 +441,8 @@ def main():
         action="store_true"
     )
 
-    arg_parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (defaults to 0h00)", type=_valid_date)
-    arg_parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD (defaults to 0h00)", type=_valid_date)
+    arg_parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (defaults to 0h00m)", type=_valid_date)
+    arg_parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD (defaults to 23h59m59s)", type=_valid_date)
     arg_parser.add_argument("--starttime", help="The Start Time - format HH:MM, only used if Start Date is set", type=_valid_time)
     arg_parser.add_argument("--endtime", help="The End Time - format HH:MM, only used if End Date is set", type=_valid_time)
     arg_parser.add_argument("-a", "--accuracy", help="Maximum accuracy (in meters), lower is better.", type=int)
@@ -566,6 +566,9 @@ def main():
 
     if args.enddate and args.endtime:
         args.enddate = args.enddate + timedelta(hours=args.endtime.hour,minutes=args.endtime.minute)
+
+    print(args.startdate)
+    print(args.enddate)
 
     convert(
         items, f_out,
