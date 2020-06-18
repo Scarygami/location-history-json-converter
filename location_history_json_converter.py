@@ -558,14 +558,14 @@ def main():
         print("Error creating output file for writing: %s" % error)
         return
 
-    if args.enddate:
-        args.enddate = args.enddate.replace(hour=23, minute=59, second=59, microsecond=999999)
-
     if args.startdate and args.starttime:
         args.startdate = args.startdate + timedelta(hours=args.starttime.hour,minutes=args.starttime.minute)
 
-    if args.enddate and args.endtime:
-        args.enddate = args.enddate + timedelta(hours=args.endtime.hour,minutes=args.endtime.minute)
+    if args.enddate:
+        if args.endtime:
+            args.enddate = args.enddate + timedelta(hours=args.endtime.hour,minutes=args.endtime.minute) - timedelta(microseconds=1)
+        else:
+            args.enddate = args.enddate.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     convert(
         items, f_out,
