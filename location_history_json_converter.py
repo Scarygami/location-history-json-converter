@@ -24,6 +24,7 @@ import json
 import math
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
+from datetime import timedelta
 
 try:
     import ijson
@@ -559,6 +560,12 @@ def main():
 
     if args.enddate:
         args.enddate = args.enddate.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    if args.startdate and args.starttime:
+        args.startdate = args.startdate + timedelta(hours=args.starttime.hour,minutes=args.starttime.minute)
+
+    if args.enddate and args.endtime:
+        args.enddate = args.enddate + timedelta(hours=args.endtime.hour,minutes=args.endtime.minute)
 
     convert(
         items, f_out,
