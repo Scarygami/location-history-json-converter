@@ -567,9 +567,6 @@ def main():
     if args.enddate and args.endtime:
         args.enddate = args.enddate + timedelta(hours=args.endtime.hour,minutes=args.endtime.minute)
 
-    print(args.startdate)
-    print(args.enddate)
-
     convert(
         items, f_out,
         format=args.format,
