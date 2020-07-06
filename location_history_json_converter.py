@@ -24,6 +24,7 @@ import json
 import math
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
+from datetime import timedelta
 
 try:
     import ijson
@@ -47,6 +48,12 @@ def _valid_date(s):
         msg = "Not a valid date: '{0}'.".format(s)
         raise ArgumentTypeError(msg)
 
+def _valid_time(s):
+    try:
+        return datetime.strptime(s, "%H:%M")
+    except ValueError:
+        msg = "Not a valid time: '{0}'.".format(s)
+        raise ArgumentTypeError(msg)
 
 def _valid_polygon(s):
     try:
@@ -434,8 +441,10 @@ def main():
         action="store_true"
     )
 
-    arg_parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (0h00)", type=_valid_date)
-    arg_parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD (0h00)", type=_valid_date)
+    arg_parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (defaults to 0h00m)", type=_valid_date)
+    arg_parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD (defaults to 23h59m59s)", type=_valid_date)
+    arg_parser.add_argument("--starttime", help="The Start Time - format HH:MM, only used if Start Date is set", type=_valid_time)
+    arg_parser.add_argument("--endtime", help="The End Time - format HH:MM, only used if End Date is set", type=_valid_time)
     arg_parser.add_argument("-a", "--accuracy", help="Maximum accuracy (in meters), lower is better.", type=int)
 
     arg_parser.add_argument(
@@ -549,8 +558,14 @@ def main():
         print("Error creating output file for writing: %s" % error)
         return
 
+    if args.startdate and args.starttime:
+        args.startdate = args.startdate + timedelta(hours=args.starttime.hour,minutes=args.starttime.minute)
+
     if args.enddate:
-        args.enddate = args.enddate.replace(hour=23, minute=59, second=59, microsecond=999999)
+        if args.endtime:
+            args.enddate = args.enddate + timedelta(hours=args.endtime.hour,minutes=args.endtime.minute) - timedelta(microseconds=1)
+        else:
+            args.enddate = args.enddate.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     convert(
         items, f_out,
