@@ -75,6 +75,11 @@ You can then install Shapely using this command:
 
     python -m pip install Shapely-X-cpX-cpXm-winX.whl
 
+#### `-f geojson`
+
+Using the geojson convertion type requires the geojson library which can be installed with
+
+    pip install geojson
 
 ### Available formats
 
@@ -108,8 +113,11 @@ that can then be handled without iterative mode (necessary for gpxtracks and the
 
 #### gpx
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
-Data produced is valid GPX 1.1.  Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks).
+Data produced is valid GPX 1.1. Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks).
 
 #### gpxtracks
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
-Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
+Data produced is valid GPX 1.1. Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
+
+#### geojson
+Produces a JSON file with a geojson line string containing the points.
