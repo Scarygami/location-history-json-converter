@@ -316,7 +316,7 @@ def _write_location(output, format, location, separator, first, last_location):
         output.write("      </trkpt>\n")
 
     if format == "geojson":
-        geojson_data.append((location["latitudeE7"] / 10000000, location["longitudeE7"] / 10000000, math.floor(int(location['timestampMs'])/1000)))
+        geojson_data.append((location["longitudeE7"] / 10000000, location["latitudeE7"] / 10000000, math.floor(int(location['timestampMs'])/1000)))
 
 
 def _write_footer(output, format):
