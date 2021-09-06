@@ -22,6 +22,7 @@ from __future__ import division
 import sys
 import json
 import math
+import re
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 from datetime import timedelta
@@ -40,6 +41,12 @@ except ImportError:
 else:
     shapely_available = True
 
+
+IGNORED_PLATFORMS = {
+    "ANDROID": [
+        re.compile("^android/google/sdk_.*"),
+    ]
+}
 
 def _valid_date(s):
     try:
@@ -78,6 +85,15 @@ def _read_activity(arr):
             if "type" in item and "confidence" in item:
                 ret[item["type"]] = item["confidence"]
     return ret
+
+
+def _valid_platform(item):
+    if not "platformType" in item or not "platform" in item:
+        return True
+    for ignored_platform_regex in IGNORED_PLATFORMS.get(item["platformType"], []):
+        if ignored_platform_regex.match(item["platform"]):
+            return False
+    return True
 
 
 def _distance(lat1, lon1, lat2, lon2):
@@ -407,6 +423,9 @@ def convert(locations, output, format="kml",
         if filtered_devices and "deviceTag" in item:
             if item["deviceTag"] in filtered_devices:
                 continue
+
+        if not _valid_platform(item):
+            continue
 
         if polygon and not _check_point(polygon, item["latitudeE7"], item["longitudeE7"]):
             continue
