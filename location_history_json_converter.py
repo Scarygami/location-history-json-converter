@@ -333,7 +333,7 @@ def _write_footer(output, format):
 def convert(locations, output, format="kml",
             js_variable="locationJsonData", separator=",",
             start_date=None, end_date=None, accuracy=None, polygon=None,
-            chronological=False):
+            chronological=False, filtered_devices=None):
     """Converts the provided locations to the specified format
 
     Parameters
@@ -371,6 +371,9 @@ def convert(locations, output, format="kml",
     chronological: bool
         Whether to sort all timestamps in chronological order (required for gpxtracks)
         This might be uncessary since recent Takeout data seems properly sorted already.
+
+    filtered_devices: list
+        A list of device Tags to filter out
     """
 
     if chronological:
@@ -400,6 +403,10 @@ def convert(locations, output, format="kml",
                 # This could probably be the default behavior
                 break
             continue
+
+        if filtered_devices and "deviceTag" in item:
+            if item["deviceTag"] in filtered_devices:
+                continue
 
         if polygon and not _check_point(polygon, item["latitudeE7"], item["longitudeE7"]):
             continue
@@ -472,6 +479,12 @@ def main():
         metavar="lat,lon",
         nargs='*',
         type=_valid_polygon
+    )
+
+    arg_parser.add_argument(
+        "-d", "--filtered-devices",
+        help="Comma separated list of device TAGs to filter out",
+        type=lambda s: [int(item) for item in s.split(',')]
     )
 
     args = arg_parser.parse_args()
@@ -575,7 +588,8 @@ def main():
         end_date=args.enddate,
         accuracy=args.accuracy,
         polygon=polygon,
-        chronological=args.chronological
+        chronological=args.chronological,
+        filtered_devices=args.filtered_devices
     )
 
     f_out.close()
