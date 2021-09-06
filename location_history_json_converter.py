@@ -397,6 +397,13 @@ def convert(locations, output, format="kml",
 
     _write_header(output, format, js_variable, separator)
 
+    auto_filtered_devices = filtered_devices == 'auto'
+    if auto_filtered_devices:
+        filtered_devices = set()
+        for item in locations:
+            if not _valid_platform(item):
+                filtered_devices.add(item['deviceTag'])
+
     first = True
     last_loc = None
     added = 0
@@ -424,7 +431,7 @@ def convert(locations, output, format="kml",
             if item["deviceTag"] in filtered_devices:
                 continue
 
-        if not _valid_platform(item):
+        if not auto_filtered_devices and not _valid_platform(item):
             continue
 
         if polygon and not _check_point(polygon, item["latitudeE7"], item["longitudeE7"]):
@@ -502,8 +509,8 @@ def main():
 
     arg_parser.add_argument(
         "-d", "--filtered-devices",
-        help="Comma separated list of device TAGs to filter out",
-        type=lambda s: [int(item) for item in s.split(',')]
+        help="Comma separated list of device TAGs to filter out, use 'auto' to guess them from platforms",
+        type=lambda s: s if s == 'auto' else [int(item) for item in s.split(',')]
     )
 
     args = arg_parser.parse_args()
