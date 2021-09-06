@@ -22,6 +22,7 @@ from __future__ import division
 import sys
 import json
 import math
+import re
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 from datetime import timedelta
@@ -40,6 +41,12 @@ except ImportError:
 else:
     shapely_available = True
 
+
+IGNORED_PLATFORMS = {
+    "ANDROID": [
+        re.compile("^android/google/sdk_.*"),
+    ]
+}
 
 def _valid_date(s):
     try:
@@ -78,6 +85,15 @@ def _read_activity(arr):
             if "type" in item and "confidence" in item:
                 ret[item["type"]] = item["confidence"]
     return ret
+
+
+def _valid_platform(item):
+    if not "platformType" in item or not "platform" in item:
+        return True
+    for ignored_platform_regex in IGNORED_PLATFORMS.get(item["platformType"], []):
+        if ignored_platform_regex.match(item["platform"]):
+            return False
+    return True
 
 
 def _distance(lat1, lon1, lat2, lon2):
@@ -333,7 +349,7 @@ def _write_footer(output, format):
 def convert(locations, output, format="kml",
             js_variable="locationJsonData", separator=",",
             start_date=None, end_date=None, accuracy=None, polygon=None,
-            chronological=False):
+            chronological=False, filtered_devices=None):
     """Converts the provided locations to the specified format
 
     Parameters
@@ -371,12 +387,22 @@ def convert(locations, output, format="kml",
     chronological: bool
         Whether to sort all timestamps in chronological order (required for gpxtracks)
         This might be uncessary since recent Takeout data seems properly sorted already.
+
+    filtered_devices: list
+        A list of device Tags to filter out
     """
 
     if chronological:
         locations = sorted(locations, key=lambda item: item["timestampMs"])
 
     _write_header(output, format, js_variable, separator)
+
+    auto_filtered_devices = filtered_devices == 'auto'
+    if auto_filtered_devices:
+        filtered_devices = set()
+        for item in locations:
+            if not _valid_platform(item):
+                filtered_devices.add(item['deviceTag'])
 
     first = True
     last_loc = None
@@ -399,6 +425,13 @@ def convert(locations, output, format="kml",
                 # If locations are sorted and we are past the enddate there are no further locations to be expected
                 # This could probably be the default behavior
                 break
+            continue
+
+        if filtered_devices and "deviceTag" in item:
+            if item["deviceTag"] in filtered_devices:
+                continue
+
+        if not auto_filtered_devices and not _valid_platform(item):
             continue
 
         if polygon and not _check_point(polygon, item["latitudeE7"], item["longitudeE7"]):
@@ -472,6 +505,12 @@ def main():
         metavar="lat,lon",
         nargs='*',
         type=_valid_polygon
+    )
+
+    arg_parser.add_argument(
+        "-d", "--filtered-devices",
+        help="Comma separated list of device TAGs to filter out, use 'auto' to guess them from platforms",
+        type=lambda s: s if s == 'auto' else [int(item) for item in s.split(',')]
     )
 
     args = arg_parser.parse_args()
@@ -575,7 +614,8 @@ def main():
         end_date=args.enddate,
         accuracy=args.accuracy,
         polygon=polygon,
-        chronological=args.chronological
+        chronological=args.chronological,
+        filtered_devices=args.filtered_devices
     )
 
     f_out.close()
