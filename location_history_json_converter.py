@@ -390,8 +390,7 @@ def convert(locations, output, format="kml",
     """
 
     if chronological:
-        #ToDo: fix this for "timestamp"
-        locations = sorted(locations, key=lambda item: item["timestampMs"])
+        locations = sorted(locations, key=_get_timestampms)
 
     _write_header(output, format, js_variable, separator)
 
