@@ -12,6 +12,10 @@ and converts it into other formats.
    (`git clone https://github.com/Scarygami/location-history-json-converter`)
    or [downloading the script file](https://raw.githubusercontent.com/Scarygami/location-history-json-converter/master/location_history_json_converter.py).
 
+*  Install dependencies using `pip install -r requirements.txt`
+
+   See below if you encounter issues installing the Shapely package
+
 *  Request your location history via [Google Takeout](https://takeout.google.com/settings/takeout/custom/location_history)
    and once the package is ready, download and unzip it.
 
