@@ -42,6 +42,13 @@ except ImportError:
 else:
     shapely_available = True
 
+try:
+    import geojson
+except ImportError:
+    geojson_available = False
+else:
+    geojson_available = True
+    geojson_data = []
 
 def _get_timestampms(s):
     if "timestampMs" in s:
@@ -324,6 +331,9 @@ def _write_location(output, format, location, separator, first, last_location):
             output.write("        </desc>\n")
         output.write("      </trkpt>\n")
 
+    if format == "geojson":
+        geojson_data.append((location["longitudeE7"] / 10000000, location["latitudeE7"] / 10000000, math.floor(int(location['timestampMs'])/1000)))
+
 
 def _write_footer(output, format):
     """Writes the file footer for the specified format to output"""
@@ -345,6 +355,9 @@ def _write_footer(output, format):
         output.write("</gpx>\n")
         return
 
+    if format == "geojson":
+        output.write(geojson.dumps(geojson.LineString(geojson_data)))
+
 
 def convert(locations, output, format="kml",
             js_variable="locationJsonData", separator=",",
@@ -363,7 +376,7 @@ def convert(locations, output, format="kml",
 
     format: str
         Format to convert to
-        Can be one of "kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks"
+        Can be one of "kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks", "geojson"
         See README.md for details about those formats
 
     js_variable: str
@@ -446,7 +459,7 @@ def main():
     arg_parser.add_argument(
         "-f",
         "--format",
-        choices=["kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks"],
+        choices=["kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks", "geojson"],
         default="kml",
         help="Format of the output"
     )
@@ -520,6 +533,10 @@ def main():
             ext = [(elem.split(",")[0], elem.split(",")[1]) for elem in args.polygon]
 
         polygon = Polygon(ext)
+
+    if not geojson_available and args.format == "geojson":
+        print("geojson is not available. Please install with `pip install geojson` and try again.")
+        return
 
     if args.iterative:
         if args.chronological:
