@@ -113,6 +113,9 @@ def _write_header(output, format, js_variable, separator):
             output.write("window.%s = " % js_variable)
         output.write("{\"locations\":[")
         return
+    
+    if format == "geojson":
+        output.write("{\"type\": \"FeatureCollection\", \"features\": [")
 
     if format == "csv":
         output.write(separator.join(["Time", "Latitude", "Longitude"]) + "\n")
@@ -173,6 +176,23 @@ def _write_location(output, format, location, separator, first, last_location):
             }
         output.write(json.dumps(item, separators=(',', ':')))
         return
+
+    if format == "geojson":
+        if not first:
+            output.write(",")
+
+        item = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                 round(location["longitudeE7"] / 10000000, 8),
+                 round(location["latitudeE7"] / 10000000, 8)
+                ]
+            }
+        }
+        output.write(json.dumps(item, separators=(',', ':')))
 
     if format == "jsonfull" or format == "jsfull":
         if not first:
@@ -328,11 +348,12 @@ def _write_location(output, format, location, separator, first, last_location):
 def _write_footer(output, format):
     """Writes the file footer for the specified format to output"""
 
-    if format == "json" or format == "js" or format == "jsonfull" or format == "jsfull":
+    if format == "json" or format == "js" or format == "jsonfull" or format == "jsfull" or format == "geojson":
         output.write("]}")
         if format == "js" or format == "jsfull":
             output.write(";")
         return
+    
 
     if format == "kml":
         output.write("  </Document>\n</kml>\n")
@@ -349,7 +370,7 @@ def _write_footer(output, format):
 def convert(locations, output, format="kml",
             js_variable="locationJsonData", separator=",",
             start_date=None, end_date=None, accuracy=None, polygon=None,
-            chronological=False):
+            chronological=False, dedup=None):
     """Converts the provided locations to the specified format
 
     Parameters
@@ -394,6 +415,7 @@ def convert(locations, output, format="kml",
 
     _write_header(output, format, js_variable, separator)
 
+    dedup_history = {}
     first = True
     last_loc = None
     added = 0
@@ -427,7 +449,20 @@ def convert(locations, output, format="kml",
         if item["longitudeE7"] > 1800000000:
             item["longitudeE7"] = item["longitudeE7"] - 4294967296
 
+        if dedup is not None:
+            dedup_latitude = round(item["latitudeE7"] / 10 ** dedup, 0)
+            dedup_longitude = round(item["longitudeE7"] / 10 ** dedup, 0)
+            dedupkey = f'{dedup_latitude}{dedup_longitude}'
+            if dedupkey in dedup_history:
+                continue
+
         _write_location(output, format, item, separator, first, last_loc)
+
+        if dedup is not None:
+            dedup_latitude = round(item["latitudeE7"] / 10 ** dedup, 0)
+            dedup_longitude = round(item["longitudeE7"] / 10 ** dedup, 0)
+            dedupkey = f'{dedup_latitude}{dedup_longitude}'
+            dedup_history[dedupkey] = True
 
         if first:
             first = False
@@ -446,7 +481,7 @@ def main():
     arg_parser.add_argument(
         "-f",
         "--format",
-        choices=["kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks"],
+        choices=["kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks", "geojson"],
         default="kml",
         help="Format of the output"
     )
@@ -462,6 +497,7 @@ def main():
     arg_parser.add_argument("--starttime", help="The Start Time - format HH:MM, only used if Start Date is set", type=_valid_time)
     arg_parser.add_argument("--endtime", help="The End Time - format HH:MM, only used if End Date is set", type=_valid_time)
     arg_parser.add_argument("-a", "--accuracy", help="Maximum accuracy (in meters), lower is better.", type=int)
+    arg_parser.add_argument("-d", "--dedup", help="dedup if two points are too close to each other", type=int)
 
     arg_parser.add_argument(
         "-c", "--chronological",
@@ -591,7 +627,8 @@ def main():
         end_date=args.enddate,
         accuracy=args.accuracy,
         polygon=polygon,
-        chronological=args.chronological
+        chronological=args.chronological,
+        dedup=args.dedup
     )
 
     f_out.close()
