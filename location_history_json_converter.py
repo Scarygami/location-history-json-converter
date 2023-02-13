@@ -566,7 +566,8 @@ def main():
             print("Error decoding json: %s" % error)
             return
 
-        items = data["locations"]
+        # attempt to get location data, if unable to find, return an empty list
+        items = data.get("locations", [])
 
     try:
         f_out = open(args.output, "w")
