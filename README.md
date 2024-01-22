@@ -40,6 +40,7 @@ optional arguments:
       --separator SEPARATOR              Separator to be used for CSV formats, defaults to comma
   -p, --polygon [lat,lon [lat,lon ...]]  List of points (lat, lon) that create a polygon.
                                          If two points are given a rectangle is created.
+  -S, --source                           Localization source GPS/CELL/WIFI.
 ```
 
 ### Special requirements for some options

@@ -120,13 +120,13 @@ def _write_header(output, format, js_variable, separator):
 
     if format == "csvfull":
         output.write(separator.join([
-            "Time", "Latitude", "Longitude", "Accuracy", "Altitude", "VerticalAccuracy", "Velocity", "Heading"
+            "Time", "Latitude", "Longitude", "Accuracy", "Altitude", "VerticalAccuracy", "Velocity", "Heading", "Source"
         ]) + "\n")
         return
 
     if format == "csvfullest":
         output.write(separator.join([
-            "Time", "Latitude", "Longitude", "Accuracy", "Altitude", "VerticalAccuracy", "Velocity", "Heading",
+            "Time", "Latitude", "Longitude", "Accuracy", "Altitude", "VerticalAccuracy", "Velocity", "Heading","Source",
             "DetectedActivties", "UNKNOWN", "STILL", "TILTING", "ON_FOOT", "WALKING", "RUNNING", "IN_VEHICLE",
             "ON_BICYCLE", "IN_ROAD_VEHICLE", "IN_RAIL_VEHICLE", "IN_TWO_WHEELER_VEHICLE", "IN_FOUR_WHEELER_VEHICLE"
         ]) + "\n")
@@ -199,7 +199,8 @@ def _write_location(output, format, location, separator, first, last_location):
             str(location.get("altitude", "")),
             str(location.get("verticalAccuracy", "")),
             str(location.get("velocity", "")),
-            str(location.get("heading", ""))
+            str(location.get("heading", "")),
+            str(location.get("source", ""))
         ]) + "\n")
 
     if format == "csvfullest":
@@ -211,7 +212,8 @@ def _write_location(output, format, location, separator, first, last_location):
             str(location.get("altitude", "")),
             str(location.get("verticalAccuracy", "")),
             str(location.get("velocity", "")),
-            str(location.get("heading", ""))
+            str(location.get("heading", "")),
+            str(location.get("source", ""))
         ]) + separator)
         if "activity" in location:
             a = _read_activity(location["activity"])
@@ -349,7 +351,7 @@ def _write_footer(output, format):
 def convert(locations, output, format="kml",
             js_variable="locationJsonData", separator=",",
             start_date=None, end_date=None, accuracy=None, polygon=None,
-            chronological=False):
+            chronological=False, source=None):
     """Converts the provided locations to the specified format
 
     Parameters
@@ -406,6 +408,9 @@ def convert(locations, output, format="kml",
         print("\r%s / Locations written: %s" % (time.strftime("%Y-%m-%d %H:%M"), added), end="")
 
         if accuracy is not None and "accuracy" in item and item["accuracy"] > accuracy:
+            continue
+
+        if source is not None and "source" in item and item["source"] != source:
             continue
 
         if start_date is not None and start_date > time:
@@ -488,6 +493,13 @@ def main():
         metavar="lat,lon",
         nargs='*',
         type=_valid_polygon
+    )
+
+    arg_parser.add_argument(
+        "-S",
+        "--source",
+        choices=["GPS", "CELL", "WIFI"],
+        help="Choose localization source among these  GPS/CELL/WIFI"
     )
 
     args = arg_parser.parse_args()
@@ -591,7 +603,8 @@ def main():
         end_date=args.enddate,
         accuracy=args.accuracy,
         polygon=polygon,
-        chronological=args.chronological
+        chronological=args.chronological,
+        source=args.source
     )
 
     f_out.close()
