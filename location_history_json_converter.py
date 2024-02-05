@@ -48,6 +48,12 @@ def _get_timestampms(s):
         return s["timestampMs"]
     return str(int(isoparse(s["timestamp"]).timestamp() * 1000))
 
+def _get_device_name(s):
+    if 'deviceTag' in s:
+        return 'Device %s' % s['deviceTag']
+    else:
+        return 'Unknown device'
+
 def _valid_date(s):
     try:
         return datetime.strptime(s, "%Y-%m-%d")
@@ -139,7 +145,7 @@ def _write_header(output, format, js_variable, separator):
         output.write("    <name>Location History</name>\n")
         return
 
-    if format == "gpx" or format == "gpxtracks":
+    if format == "gpx" or format == "gpxtracks" or format == "gpxtrack_per_device":
         output.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         output.write("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\"")
         output.write(" creator=\"Google Latitude JSON Converter\"")
@@ -286,9 +292,11 @@ def _write_location(output, format, location, separator, first, last_location):
         output.write("</desc>\n")
         output.write("  </wpt>\n")
 
-    if format == "gpxtracks":
+    if format == "gpxtracks" or format == "gpxtrack_per_device":
         if first:
             output.write("  <trk>\n")
+            if format == "gpxtrack_per_device":
+                output.write("    <name>%s</name>\n" % _get_device_name(location))
             output.write("    <trkseg>\n")
 
         if last_location:
@@ -299,11 +307,14 @@ def _write_location(output, format, location, separator, first, last_location):
                 last_location["latitudeE7"] / 10000000,
                 last_location["longitudeE7"] / 10000000
             )
-            if timedelta > 10 or distancedelta > 40:
+            if format == "gpxtracks" and (timedelta > 10 or distancedelta > 40) or \
+                    format == "gpxtrack_per_device" and _get_device_name(last_location) != _get_device_name(location):
                 # No points for 10 minutes or 40km in under 10m? Start a new track.
                 output.write("    </trkseg>\n")
                 output.write("  </trk>\n")
                 output.write("  <trk>\n")
+                if format == "gpxtrack_per_device":
+                    output.write("   <name>%s</name>\n" % _get_device_name(location))
                 output.write("    <trkseg>\n")
 
         output.write(
@@ -338,8 +349,8 @@ def _write_footer(output, format):
         output.write("  </Document>\n</kml>\n")
         return
 
-    if format == "gpx" or format == "gpxtracks":
-        if format == "gpxtracks":
+    if format == "gpx" or format == "gpxtracks" or format == "gpxtrack_per_device":
+        if format == "gpxtracks" or format == "gpxtrack_per_device":
             output.write("    </trkseg>\n")
             output.write("  </trk>\n")
         output.write("</gpx>\n")
@@ -363,7 +374,7 @@ def convert(locations, output, format="kml",
 
     format: str
         Format to convert to
-        Can be one of "kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks"
+        Can be one of "kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks", "gpxtrack_per_device"
         See README.md for details about those formats
 
     js_variable: str
@@ -385,12 +396,16 @@ def convert(locations, output, format="kml",
         All locations outside of the Polygon will be ignored
 
     chronological: bool
-        Whether to sort all timestamps in chronological order (required for gpxtracks)
+        Whether to sort all timestamps in chronological order (required for gpxtracks and gpxtrack_per_device)
         This might be uncessary since recent Takeout data seems properly sorted already.
     """
 
     if chronological:
-        locations = sorted(locations, key=_get_timestampms)
+        sort_key = _get_timestampms
+        if format == "gpxtrack_per_device":
+            def sort_key(location):
+                return _get_device_name(location), _get_timestampms(location)
+        locations = sorted(locations, key=sort_key)
 
     _write_header(output, format, js_variable, separator)
 
@@ -446,7 +461,7 @@ def main():
     arg_parser.add_argument(
         "-f",
         "--format",
-        choices=["kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks"],
+        choices=["kml", "json", "js", "jsonfull", "jsfull", "csv", "csvfull", "csvfullest", "gpx", "gpxtracks", "gpxtrack_per_device"],
         default="kml",
         help="Format of the output"
     )
