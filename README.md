@@ -108,12 +108,12 @@ Only timestamp and location are included.
 #### jsonfull, jsfull
 These types essentially make a full copy of the entries in the original JSON File in json or js format.
 With the option of filtering start and end date this can be used to create a smaller file in iterative mode,
-that can then be handled without iterative mode (necessary for gpxtracks and the chronological option).
+that can then be handled without iterative mode (necessary for gpxtracks/gpxtrack_per_device and the chronological option).
 
 #### gpx
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
-Data produced is valid GPX 1.1.  Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks).
+Data produced is valid GPX 1.1.  Points are stored as individual, unrelated waypoints (like the other formats, except for gpxtracks/gpxtrack_per_device).
 
-#### gpxtracks
+#### gpxtracks, gpxtrack_per_device
 GPS Exchange Format including location, timestamp, and accuracy/speed/altitude as available.
-Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers).
+Data produced is valid GPX 1.1.  Points are grouped together into tracks by time and location (specifically, two chronological points split a track if they differ by over 10 minutes or approximately 40 kilometers) for gpxtracks, and by device for gpxtrack_per_device.
